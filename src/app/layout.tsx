@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import MetaPixel from "@/components/MetaPixel";
+import { Analytics } from "@vercel/analytics/next"; // <-- 1. Impor Vercel Analytics di sini
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +32,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {}
+        {/* Tracking Scripts (Google & Meta) */}
         <Suspense fallback={null}>
           <GoogleAnalytics GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GA_ID || "G-XXXXXXXXXX"} />
           <MetaPixel PIXEL_ID={process.env.NEXT_PUBLIC_META_PIXEL_ID || "XXXXXXXXXXXXXXX"} />
@@ -39,6 +40,9 @@ export default function RootLayout({
         
         {/* Render Page Content */}
         {children}
+
+        {/* <-- 2. Render Vercel Analytics di paling bawah body */}
+        <Analytics /> 
       </body>
     </html>
   );
