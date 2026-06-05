@@ -13,7 +13,6 @@ export default function PublicFooter() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           
-          { }
           {/* Column 1: Brand Profile */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-6">
@@ -50,7 +49,6 @@ export default function PublicFooter() {
             </div>
           </div>
 
-          { }
           {/* Column 2: Menu / Quick Links */}
           <div>
             <h4 className="text-white font-bold mb-6 tracking-wider uppercase text-sm">Menu</h4>
@@ -74,7 +72,6 @@ export default function PublicFooter() {
             </ul>
           </div>
 
-          { }
           {/* Column 4: Contact Us */}
           <div>
             <h4 className="text-white font-bold mb-6 tracking-wider uppercase text-sm">Contact Us</h4>
@@ -98,7 +95,6 @@ export default function PublicFooter() {
           </div>
         </div>
 
-        { }
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-gray-500">
