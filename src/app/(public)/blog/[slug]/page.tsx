@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { motion, Variants } from 'framer-motion';
-import { Calendar, User, Clock, ChevronLeft, Link as LinkIcon, Loader2, Mail } from 'lucide-react';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { Calendar, User, Clock, ChevronLeft, Link as LinkIcon, Loader2, Mail, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 const fadeInUp: Variants = {
@@ -25,11 +25,19 @@ export default function PublicBlogDetailPage() {
   const [article, setArticle] = useState<any>(null);
   const [relatedArticles, setRelatedArticles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // State untuk Toast Notification "Copy Link"
+  const [showToast, setShowToast] = useState(false);
 
-  // Fitur Copy Link
+  // Fitur Copy Link Premium
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    alert("Link copied to clipboard!");
+    setShowToast(true);
+    
+    // Toast akan hilang otomatis setelah 3 detik
+    setTimeout(() => {
+      setShowToast(false);
+    }, 3000);
   };
 
   useEffect(() => {
@@ -103,10 +111,26 @@ export default function PublicBlogDetailPage() {
   const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
 
   return (
-    <main className="flex flex-col w-full bg-[#f8f9fa] min-h-screen">
+    <main className="flex flex-col w-full bg-[#f8f9fa] min-h-screen relative">
       
+      {/* TOAST NOTIFICATION */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+            transition={{ type: "spring", bounce: 0.4, duration: 0.6 }}
+            className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-[100] flex items-center gap-3 bg-[#11223a] text-white px-6 py-3.5 rounded-full shadow-2xl border border-white/10"
+          >
+            <CheckCircle className="w-5 h-5 text-[#B88E52]" />
+            <span className="font-semibold text-sm tracking-wide">Link copied to clipboard!</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 1. CINEMATIC HERO SECTION */}
-      <section className="relative w-full min-h-[60vh] md:min-h-[70vh] flex flex-col justify-end pt-48 pb-16">
+      <section className="relative w-full min-h-[70vh] flex flex-col justify-end pt-48 pb-16">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url('${article.coverImage}')` }}
@@ -138,12 +162,7 @@ export default function PublicBlogDetailPage() {
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           
           {/* KIRI: KONTEN ARTIKEL & KOMENTAR */}
-          <motion.div 
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-            className="w-full lg:w-2/3 bg-white rounded-[2rem] md:rounded-[3rem] shadow-[0_20px_50px_rgba(17,34,58,0.05)] p-8 md:p-12 lg:p-16 border border-gray-100"
-          >
+          <div className="w-full lg:w-2/3 bg-white rounded-[2rem] md:rounded-[3rem] shadow-[0_20px_50px_rgba(17,34,58,0.05)] p-8 md:p-12 lg:p-16 border border-gray-100">
             
             {/* Top Action & Share */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12 pb-8 border-b border-gray-100">
@@ -159,7 +178,7 @@ export default function PublicBlogDetailPage() {
                 <a href={`https://twitter.com/intent/tweet?url=${currentUrl}&text=${article.title}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#11223a] hover:bg-gray-50 transition-all">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
                 </a>
-                <button onClick={handleCopyLink} className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#11223a] hover:bg-gray-50 transition-all">
+                <button onClick={handleCopyLink} className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#11223a] hover:bg-gray-50 transition-all focus:outline-none focus:ring-2 focus:ring-[#B88E52]">
                   <LinkIcon className="w-4 h-4" />
                 </button>
               </div>
@@ -192,10 +211,11 @@ export default function PublicBlogDetailPage() {
             <div className="mt-16 pt-12 border-t border-gray-100">
               <h3 className="text-2xl font-bold text-[#11223a] mb-8">Join the Conversation</h3>
               
+              {/* Form Leave a Reply */}
               <div className="bg-[#fdfaf5] p-8 md:p-10 rounded-[2rem] border border-[#B88E52]/20 mb-12 shadow-sm">
                 <h4 className="text-lg font-bold text-[#11223a] mb-2">Leave a Reply</h4>
                 <p className="text-sm text-gray-500 mb-6">Your email address will not be published. Required fields are marked *</p>
-                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert("Comments will be available soon!"); }}>
+                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert("Feature coming soon!"); }}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input type="text" placeholder="Name *" className="w-full px-5 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#B88E52] focus:ring-1 focus:ring-[#B88E52] bg-white text-sm transition-all" required />
                     <input type="email" placeholder="Email *" className="w-full px-5 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#B88E52] focus:ring-1 focus:ring-[#B88E52] bg-white text-sm transition-all" required />
@@ -204,19 +224,44 @@ export default function PublicBlogDetailPage() {
                   <button type="submit" className="px-8 py-3.5 rounded-xl bg-[#11223a] text-white font-bold text-sm hover:bg-[#0f1f33] transition-colors shadow-md">Post Comment</button>
                 </form>
               </div>
+              
+              {/* Dummy Comments List */}
+              <div className="space-y-10">
+                <div className="flex gap-4 md:gap-6">
+                  <div className="w-12 h-12 rounded-full bg-gray-200 shrink-0 overflow-hidden shadow-sm">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&auto=format&fit=crop" alt="User" className="w-full h-full object-cover"/>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <h5 className="font-bold text-[#11223a]">Michael V.</h5>
+                      <span className="text-xs text-gray-400">June 14, 2026</span>
+                    </div>
+                    <p className="text-gray-600 text-sm leading-relaxed">This is incredibly helpful! I'm planning my trip for next month and was wondering about the trekking difficulty on the island. The details provided here are exactly what I needed to prepare.</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-4 md:gap-6">
+                  <div className="w-12 h-12 rounded-full bg-gray-200 shrink-0 overflow-hidden shadow-sm">
+                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=100&auto=format&fit=crop" alt="User" className="w-full h-full object-cover"/>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <h5 className="font-bold text-[#11223a]">Sarah Jenkins</h5>
+                      <span className="text-xs text-gray-400">June 10, 2026</span>
+                    </div>
+                    <p className="text-gray-600 text-sm leading-relaxed">Amazing photography! That sunset view is exactly why I booked my liveaboard trip. Can't wait to see it with my own eyes.</p>
+                  </div>
+                </div>
+              </div>
+
             </div>
-          </motion.div>
+          </div>
 
           {/* KANAN: SIDEBAR (REKOMENDASI ARTIKEL) */}
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="w-full lg:w-1/3 lg:sticky lg:top-32 h-fit space-y-8 pt-8 lg:pt-0"
-          >
+          <div className="w-full lg:w-1/3 lg:sticky lg:top-32 h-fit space-y-8 pt-8 lg:pt-0">
+            
             {/* Box Rekomendasi */}
-            <motion.div variants={fadeInUp} className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-[0_10px_40px_rgba(17,34,58,0.03)]">
+            <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-[0_10px_40px_rgba(17,34,58,0.03)]">
               <h3 className="text-xl font-bold text-[#11223a] mb-6 flex items-center gap-2">
                 <span className="w-1.5 h-6 bg-[#B88E52] rounded-full inline-block"></span> Recommended
               </h3>
@@ -238,10 +283,14 @@ export default function PublicBlogDetailPage() {
                   <p className="text-sm text-gray-500 italic">No other articles found.</p>
                 )}
               </div>
-            </motion.div>
+              
+              <a href="/blog" className="mt-8 flex items-center justify-center w-full py-3 rounded-xl bg-gray-50 text-[#11223a] text-sm font-bold hover:bg-gray-100 transition-colors">
+                View All Posts
+              </a>
+            </div>
 
             {/* Box Newsletter Subscribe */}
-            <motion.div variants={fadeInUp} className="bg-[#11223a] rounded-[2rem] p-8 border border-[#1a3356] shadow-xl text-center relative overflow-hidden">
+            <div className="bg-[#11223a] rounded-[2rem] p-8 border border-[#1a3356] shadow-xl text-center relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#B88E52]/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
               
               <div className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
@@ -254,9 +303,9 @@ export default function PublicBlogDetailPage() {
                 <input type="email" placeholder="Email address" className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#B88E52] mb-3" required />
                 <button type="submit" className="w-full py-3 rounded-xl bg-[#B88E52] text-white text-sm font-bold hover:bg-[#a37c46] transition-colors">Subscribe</button>
               </form>
-            </motion.div>
+            </div>
 
-          </motion.div>
+          </div>
         </div>
       </section>
 
