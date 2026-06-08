@@ -1,18 +1,19 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { 
-  Users, 
   FileText, 
   Image as ImageIcon, 
-  Briefcase, 
   ArrowRight, 
   Activity, 
   PlusCircle,
   Ship
 } from 'lucide-react';
+import { collection, getCountFromServer } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { db, auth } from '@/lib/firebase';
 
-// Perbaikan: ease menggunakan array bezier agar tidak ditolak TypeScript
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: { 
@@ -34,11 +35,54 @@ const staggerContainer: Variants = {
 };
 
 export default function AdminDashboardPage() {
-  // Dummy data untuk statistik awal (Nanti akan dihubungkan dengan Firebase)
+  const [blogCount, setBlogCount] = useState<number | string>('...');
+  // Set default ke 0 karena koleksi gallery belum ada di database
+  const [galleryCount, setGalleryCount] = useState<number | string>(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const fetchDashboardStats = async () => {
+          setIsLoading(true);
+          
+          // 1. Fetch Blog Count
+          try {
+            const blogSnap = await getCountFromServer(collection(db, 'blogs'));
+            setBlogCount(blogSnap.data().count);
+          } catch (error) {
+            console.error("Error fetching blog stats:", error);
+            setBlogCount(0);
+          }
+
+          // 2. Fetch Gallery Count (Sementara dimatikan)
+          /*
+          try {
+            const gallerySnap = await getCountFromServer(collection(db, 'gallery'));
+            setGalleryCount(gallerySnap.data().count);
+          } catch (error) {
+            console.error("Error fetching gallery stats:", error);
+            setGalleryCount(0);
+          } 
+          */
+          
+          setIsLoading(false);
+        };
+
+        fetchDashboardStats();
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Data Statistik Utama
   const stats = [
     { 
       title: 'Published Blogs', 
-      value: '12', 
+      value: blogCount, 
       icon: <FileText className="w-6 h-6 text-blue-500" />, 
       bg: 'bg-blue-50', 
       link: '/admin/blog',
@@ -46,28 +90,12 @@ export default function AdminDashboardPage() {
     },
     { 
       title: 'Gallery Assets', 
-      value: '48', 
+      value: galleryCount, 
       icon: <ImageIcon className="w-6 h-6 text-emerald-500" />, 
       bg: 'bg-emerald-50', 
       link: '/admin/gallery',
       status: 'Active'
-    },
-    { 
-      title: 'B2C Explorers', 
-      value: '0', 
-      icon: <Users className="w-6 h-6 text-purple-500" />, 
-      bg: 'bg-purple-50', 
-      link: '#',
-      status: 'Coming Soon'
-    },
-    { 
-      title: 'B2B Partners', 
-      value: '0', 
-      icon: <Briefcase className="w-6 h-6 text-amber-500" />, 
-      bg: 'bg-amber-50', 
-      link: '#',
-      status: 'Coming Soon'
-    },
+    }
   ];
 
   return (
@@ -88,28 +116,29 @@ export default function AdminDashboardPage() {
         </div>
       </motion.div>
 
-      {/* 2. Key Metrics (Stats) */}
-      <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* 2. Key Metrics (Stats) - Ubah ke grid-cols-2 agar lebih lebar */}
+      <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {stats.map((stat, index) => (
           <motion.a
             href={stat.status === 'Active' ? stat.link : '#'}
             key={index}
             variants={fadeInUp}
-            className={`block p-6 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all ${stat.status === 'Coming Soon' ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:-translate-y-1'}`}
+            className="block p-6 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1"
           >
             <div className="flex items-center justify-between mb-4">
               <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center`}>
                 {stat.icon}
               </div>
-              {stat.status === 'Coming Soon' && (
-                <span className="text-[10px] uppercase tracking-wider font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded-md">
-                  Soon
-                </span>
-              )}
             </div>
             <div>
               <p className="text-gray-500 text-sm font-medium mb-1">{stat.title}</p>
-              <h3 className="text-3xl font-bold text-[#11223a]">{stat.value}</h3>
+              <h3 className="text-3xl font-bold text-[#11223a]">
+                {isLoading ? (
+                  <span className="inline-block w-8 h-8 rounded-full border-2 border-gray-200 border-t-[#B88E52] animate-spin"></span>
+                ) : (
+                  stat.value
+                )}
+              </h3>
             </div>
           </motion.a>
         ))}
@@ -149,12 +178,12 @@ export default function AdminDashboardPage() {
               <Ship className="w-48 h-48 text-[#B88E52]" />
             </div>
             <div className="relative z-10">
-              <h2 className="text-xl font-bold mb-2">Phase 1: Content Management</h2>
+              <h2 className="text-xl font-bold mb-2">Pusat Kendali Konten</h2>
               <p className="text-gray-400 text-sm mb-6 max-w-md leading-relaxed">
-                The current system focuses on establishing the digital storefront. Blog and Gallery modules are active. The booking engine and B2B/B2C portals will be activated in the next development phase.
+                Sistem ini dikhususkan untuk mengelola halaman publik website PGI Voyage. Pastikan artikel blog memiliki keyword SEO yang tepat dan foto galeri diunggah dengan resolusi tinggi namun ukuran file yang optimal.
               </p>
               <div className="inline-flex items-center gap-2 bg-[#B88E52]/20 text-[#B88E52] px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">
-                <Activity className="w-4 h-4" /> Development in Progress
+                <Activity className="w-4 h-4" /> Live Web Manager
               </div>
             </div>
           </div>
@@ -168,26 +197,18 @@ export default function AdminDashboardPage() {
           </div>
           
           <div className="space-y-6">
-            {/* Dummy Log Items */}
             <div className="flex items-start gap-4">
               <div className="w-2 h-2 rounded-full bg-emerald-500 mt-2 shrink-0"></div>
               <div>
-                <p className="text-sm font-medium text-[#11223a]">Admin logged in successfully</p>
-                <p className="text-xs text-gray-400 mt-1">Just now • IP: 192.168.1.1</p>
+                <p className="text-sm font-medium text-[#11223a]">Admin authenticated</p>
+                <p className="text-xs text-gray-400 mt-1">Status: Secure Session Active</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
               <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 shrink-0"></div>
               <div>
-                <p className="text-sm font-medium text-[#11223a]">System framework initialized</p>
-                <p className="text-xs text-gray-400 mt-1">2 hours ago • Automated</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-4">
-              <div className="w-2 h-2 rounded-full bg-amber-500 mt-2 shrink-0"></div>
-              <div>
-                <p className="text-sm font-medium text-[#11223a]">Security rules updated</p>
-                <p className="text-xs text-gray-400 mt-1">1 day ago • Super Admin</p>
+                <p className="text-sm font-medium text-[#11223a]">Firebase connection established</p>
+                <p className="text-xs text-gray-400 mt-1">Automated System Check</p>
               </div>
             </div>
           </div>
