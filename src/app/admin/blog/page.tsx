@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { collection, getDocs, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
@@ -13,9 +13,15 @@ import {
   Eye, 
   Loader2, 
   AlertTriangle,
-  MoreVertical,
-  X
+  X,
+  Filter,
+  LayoutGrid,
+  List as ListIcon,
+  ChevronDown,
+  Calendar,
+  User as UserIcon
 } from 'lucide-react';
+import Link from 'next/link';
 
 // Tipe data Blog sesuai skema Firestore kita
 interface Blog {
@@ -38,12 +44,90 @@ const staggerContainer: Variants = {
   visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
 };
 
+// Komponen Kustom Dropdown
+interface CustomSelectProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+}
+
+function CustomSelect({ value, onChange, options, placeholder = "Select..." }: CustomSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find((opt) => opt.value === value);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl text-sm focus:outline-none transition-all flex items-center justify-between text-left
+          ${isOpen ? 'border-[#B88E52] ring-1 ring-[#B88E52]' : 'border-gray-200 hover:border-gray-300'}
+        `}
+      >
+        <span className={`block truncate ${selectedOption ? 'text-[#11223a] font-medium' : 'text-gray-400'}`}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#B88E52]' : ''}`} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute z-30 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl max-h-60 overflow-y-auto py-1 custom-scrollbar"
+          >
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center
+                  ${value === opt.value 
+                    ? 'bg-[#B88E52]/10 text-[#B88E52] font-bold border-l-2 border-[#B88E52]' 
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-[#11223a] border-l-2 border-transparent'
+                  }
+                `}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function AdminBlogPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
   
-  // State untuk Modal Hapus (Custom Confirm Box)
+  // States untuk Filter & View
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  
+  // State Modal Hapus
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [blogToDelete, setBlogToDelete] = useState<Blog | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -51,7 +135,6 @@ export default function AdminBlogPage() {
   const fetchBlogs = async () => {
     setIsLoading(true);
     try {
-      // Menarik data dari collection 'blogs', diurutkan dari yang terbaru
       const blogsRef = collection(db, 'blogs');
       const q = query(blogsRef, orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
@@ -64,7 +147,6 @@ export default function AdminBlogPage() {
       setBlogs(blogData);
     } catch (error) {
       console.error("Error fetching blogs:", error);
-      // Jika error (misal index belum terbuat), kita ambil tanpa orderBy dulu sebagai fallback
       try {
         const fallbackSnapshot = await getDocs(collection(db, 'blogs'));
         const fallbackData: Blog[] = [];
@@ -84,6 +166,23 @@ export default function AdminBlogPage() {
     fetchBlogs();
   }, []);
 
+  // Ekstrak daftar kategori unik secara dinamis dari data blogs
+  const uniqueCategories = useMemo(() => {
+    const cats = new Set(blogs.map(b => b.category).filter(Boolean));
+    return Array.from(cats);
+  }, [blogs]);
+
+  const categoryOptions = [
+    { value: 'all', label: 'Semua Kategori' },
+    ...uniqueCategories.map(cat => ({ value: cat, label: cat }))
+  ];
+
+  const statusOptions = [
+    { value: 'all', label: 'Semua Status' },
+    { value: 'Published', label: 'Telah Terbit (Published)' },
+    { value: 'Draft', label: 'Draft / Konsep' }
+  ];
+
   const confirmDelete = (blog: Blog) => {
     setBlogToDelete(blog);
     setIsDeleteModalOpen(true);
@@ -95,7 +194,6 @@ export default function AdminBlogPage() {
     setIsDeleting(true);
     try {
       await deleteDoc(doc(db, 'blogs', blogToDelete.id));
-      // Hapus dari state lokal agar UI langsung update tanpa perlu refresh browser
       setBlogs(blogs.filter(b => b.id !== blogToDelete.id));
       setIsDeleteModalOpen(false);
       setBlogToDelete(null);
@@ -106,18 +204,33 @@ export default function AdminBlogPage() {
     }
   };
 
-  const filteredBlogs = blogs.filter(blog => 
-    blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    blog.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter Logic Cerdas
+  const filteredBlogs = blogs.filter(blog => {
+    const matchesSearch = 
+      blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      blog.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      blog.author.toLowerCase().includes(searchQuery.toLowerCase());
+      
+    const matchesCategory = filterCategory === 'all' || blog.category === filterCategory;
+    const matchesStatus = filterStatus === 'all' || blog.status === filterStatus;
+
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
 
   return (
     <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+      `}} />
+
       <motion.div 
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
-        className="space-y-8"
+        className="space-y-6"
       >
         {/* Header Section */}
         <motion.div variants={fadeInUp} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -125,187 +238,307 @@ export default function AdminBlogPage() {
             <h1 className="text-3xl font-bold text-[#11223a] mb-2">Journal & Articles</h1>
             <p className="text-gray-500">Kelola konten blog, panduan wisata, dan berita PGI Voyage.</p>
           </div>
-          <a 
+          <Link 
             href="/admin/blog/create" 
-            className="inline-flex items-center gap-2 bg-[#11223a] hover:bg-[#0f1f33] text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+            className="inline-flex items-center gap-2 bg-[#11223a] hover:bg-[#0f1f33] text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 whitespace-nowrap"
           >
             <PlusCircle className="w-5 h-5" /> Tulis Artikel Baru
-          </a>
+          </Link>
         </motion.div>
 
-        {/* Action Bar (Search & Filter) */}
-        <motion.div variants={fadeInUp} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative w-full sm:w-96">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
+        {/* Filter Cerdas Panel */}
+        <motion.div variants={fadeInUp} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4 relative z-20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[#11223a] font-bold">
+              <Filter className="w-5 h-5 text-[#B88E52]" />
+              Smart Filters
             </div>
-            <input
-              type="text"
-              placeholder="Cari judul artikel atau kategori..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#B88E52] focus:ring-1 focus:ring-[#B88E52] transition-all"
+            
+            {/* View Mode Toggle */}
+            <div className="flex bg-gray-100 p-1 rounded-xl items-center border border-gray-200">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-[#11223a] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                title="Grid View"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-[#11223a] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                title="List View"
+              >
+                <ListIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-20">
+            {/* 1. Search Bar */}
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Cari judul, kategori, penulis..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-[#11223a] placeholder-gray-400 focus:outline-none focus:border-[#B88E52] focus:ring-1 focus:ring-[#B88E52] transition-all"
+              />
+            </div>
+
+            {/* 2. Kategori Dropdown */}
+            <CustomSelect 
+              value={filterCategory}
+              onChange={setFilterCategory}
+              options={categoryOptions}
+            />
+
+            {/* 3. Status Dropdown */}
+            <CustomSelect 
+              value={filterStatus}
+              onChange={setFilterStatus}
+              options={statusOptions}
             />
           </div>
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <span className="text-sm font-medium text-gray-500 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-200">
-              Total: {blogs.length} Artikel
-            </span>
+          
+          {/* Active Results Status */}
+          <div className="pt-2 flex items-center justify-between text-xs text-gray-500 border-t border-gray-50 mt-4">
+            <span>Ditemukan <strong>{filteredBlogs.length}</strong> artikel</span>
+            {(filterCategory !== 'all' || filterStatus !== 'all' || searchQuery !== '') && (
+              <button 
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilterCategory('all');
+                  setFilterStatus('all');
+                }}
+                className="text-red-500 hover:text-red-600 font-semibold transition-colors"
+              >
+                Reset Filters
+              </button>
+            )}
           </div>
         </motion.div>
 
-        {/* Data Table Section */}
-        <motion.div variants={fadeInUp} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50/80 border-b border-gray-100">
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Judul Artikel</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Kategori</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Tanggal</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {isLoading ? (
-                  /* Loading State */
-                  <tr>
-                    <td colSpan={5} className="px-6 py-20 text-center">
-                      <div className="flex flex-col items-center justify-center text-gray-400">
-                        <Loader2 className="w-8 h-8 animate-spin mb-4 text-[#B88E52]" />
-                        <p>Memuat data artikel dari database...</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : filteredBlogs.length === 0 ? (
-                  /* Empty State */
-                  <tr>
-                    <td colSpan={5} className="px-6 py-20 text-center">
-                      <div className="flex flex-col items-center justify-center text-gray-400">
-                        <FileText className="w-12 h-12 mb-4 text-gray-300" />
-                        <p className="text-lg font-medium text-[#11223a] mb-1">Belum Ada Artikel</p>
-                        <p className="text-sm">Silakan buat artikel pertama Anda untuk ditampilkan di website.</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  /* Data Mapping */
-                  filteredBlogs.map((blog) => (
-                    <tr key={blog.id} className="hover:bg-gray-50/50 transition-colors group">
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-[#11223a] line-clamp-1">{blog.title}</span>
-                          <span className="text-xs text-gray-400 mt-1">Oleh: {blog.author}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
-                          {blog.category}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+        {/* Data Layout Container */}
+        {isLoading ? (
+          <div className="py-20 flex flex-col items-center justify-center text-gray-400 bg-white rounded-3xl border border-gray-100 relative z-10">
+            <Loader2 className="w-10 h-10 animate-spin mb-4 text-[#B88E52]" />
+            <p>Memuat jurnal dari arsip...</p>
+          </div>
+        ) : filteredBlogs.length === 0 ? (
+          <div className="py-20 flex flex-col items-center justify-center text-gray-400 bg-white rounded-3xl border border-gray-100 relative z-10">
+            <FileText className="w-16 h-16 mb-4 text-gray-200" />
+            <h3 className="text-xl font-bold text-[#11223a] mb-1">Artikel Tidak Ditemukan</h3>
+            <p className="text-sm">Silakan ubah kriteria pencarian atau buat artikel baru.</p>
+          </div>
+        ) : (
+          <motion.div 
+            layout 
+            className={`relative z-10 ${
+              viewMode === 'grid' 
+                ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" 
+                : "flex flex-col gap-3"
+            }`}
+          >
+            <AnimatePresence>
+              {filteredBlogs.map((blog) => (
+                <motion.div 
+                  layout
+                  key={blog.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3, layout: { type: "spring", stiffness: 300, damping: 30 } }}
+                  className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden group hover:shadow-md transition-all ${
+                    viewMode === 'grid' ? 'flex flex-col' : 'flex flex-col sm:flex-row items-start sm:items-center p-4 gap-4 sm:gap-6'
+                  }`}
+                >
+                  
+                  {/* --- TAMPILAN JIKA GRID MODE (CARDS) --- */}
+                  {viewMode === 'grid' ? (
+                    <>
+                      {/* Placeholder Image / Header Dekoratif untuk Card */}
+                      <div className="h-32 bg-gradient-to-r from-[#11223a] to-[#1a365d] relative overflow-hidden flex items-center justify-center p-6">
+                        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent mix-blend-overlay"></div>
+                        <FileText className="w-12 h-12 text-white/20 absolute -bottom-4 -right-4 transform -rotate-12" />
+                        
+                        {/* Status Badge */}
+                        <div className={`absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm ${
                           blog.status === 'Published' 
-                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/50' 
-                            : 'bg-amber-50 text-amber-600 border border-amber-200/50'
+                            ? 'bg-emerald-500 text-white' 
+                            : 'bg-amber-500 text-white'
+                        }`}>
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                          {blog.status}
+                        </div>
+                      </div>
+
+                      {/* Konten Card */}
+                      <div className="p-6 flex flex-col flex-1">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="px-2.5 py-1 rounded-md bg-[#B88E52]/10 text-[#B88E52] text-[10px] font-black uppercase tracking-wider">
+                            {blog.category || 'Uncategorized'}
+                          </span>
+                        </div>
+                        
+                        <h3 className="font-bold text-[#11223a] text-lg leading-tight mb-4 line-clamp-2" title={blog.title}>
+                          {blog.title}
+                        </h3>
+                        
+                        <div className="mt-auto space-y-2 text-sm text-gray-500 border-t border-gray-100 pt-4">
+                          <div className="flex items-center gap-2">
+                            <UserIcon className="w-4 h-4 shrink-0 text-gray-400" />
+                            <span className="truncate">{blog.author || 'Admin'}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 shrink-0 text-gray-400" />
+                            <span>
+                              {blog.createdAt ? new Date(blog.createdAt.seconds * 1000).toLocaleDateString('id-ID', {
+                                day: 'numeric', month: 'long', year: 'numeric'
+                              }) : 'Draft'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons (Grid) */}
+                        <div className="flex items-center justify-between gap-2 mt-6 pt-4 border-t border-gray-100">
+                          <a 
+                            href={`/blog/${blog.slug}`} 
+                            target="_blank"
+                            className="flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 hover:text-[#11223a] rounded-lg transition-colors"
+                          >
+                            <Eye className="w-4 h-4" /> View
+                          </a>
+                          <Link 
+                            href={`/admin/blog/edit/${blog.id}`}
+                            className="flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                          >
+                            <Edit3 className="w-4 h-4" /> Edit
+                          </Link>
+                          <button 
+                            onClick={() => confirmDelete(blog)}
+                            className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    
+                    /* --- TAMPILAN JIKA LIST MODE (ROWS) --- */
+                    <>
+                      {/* Icon & Details */}
+                      <div className="flex-1 min-w-0 flex items-center gap-4 w-full">
+                        <div className="hidden sm:flex w-12 h-12 bg-gray-50 rounded-xl items-center justify-center shrink-0 border border-gray-100 text-gray-400">
+                          <FileText className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-[#11223a] text-base md:text-lg truncate mb-1" title={blog.title}>
+                            {blog.title}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs md:text-sm text-gray-500">
+                            <span className="flex items-center gap-1.5 text-[#B88E52] font-semibold bg-[#B88E52]/10 px-2 py-0.5 rounded-md text-[10px] uppercase">
+                              {blog.category || 'Uncategorized'}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <UserIcon className="w-4 h-4" /> {blog.author || 'Admin'}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Calendar className="w-4 h-4" />
+                              {blog.createdAt ? new Date(blog.createdAt.seconds * 1000).toLocaleDateString('id-ID', {
+                                day: 'numeric', month: 'short', year: 'numeric'
+                              }) : '-'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Status Badge (List) */}
+                      <div className="shrink-0">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${
+                          blog.status === 'Published' 
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
+                            : 'bg-amber-50 text-amber-600 border-amber-200'
                         }`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${blog.status === 'Published' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
                           {blog.status}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {blog.createdAt ? new Date(blog.createdAt.seconds * 1000).toLocaleDateString('id-ID', {
-                          day: 'numeric', month: 'short', year: 'numeric'
-                        }) : '-'}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <a 
-                            href={`/blog/${blog.slug}`} 
-                            target="_blank"
-                            title="Lihat di Website"
-                            className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </a>
-                          <a 
-                            href={`/admin/blog/edit/${blog.id}`}
-                            title="Edit Artikel" 
-                            className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </a>
-                          <button 
-                            onClick={() => confirmDelete(blog)}
-                            title="Hapus Artikel"
-                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </motion.div>
+                      </div>
+
+                      {/* Actions (List) */}
+                      <div className="shrink-0 flex items-center justify-end gap-1 w-full sm:w-auto mt-3 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100 sm:border-l sm:pl-4">
+                        <a 
+                          href={`/blog/${blog.slug}`} 
+                          target="_blank"
+                          title="Lihat Artikel"
+                          className="flex-1 sm:flex-none flex justify-center p-2.5 text-gray-400 hover:text-[#11223a] hover:bg-gray-100 rounded-xl transition-colors"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </a>
+                        <Link 
+                          href={`/admin/blog/edit/${blog.id}`}
+                          title="Edit Artikel"
+                          className="flex-1 sm:flex-none flex justify-center p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                        >
+                          <Edit3 className="w-5 h-5" />
+                        </Link>
+                        <button 
+                          onClick={() => confirmDelete(blog)}
+                          title="Hapus Artikel"
+                          className="flex-1 sm:flex-none flex justify-center p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
       </motion.div>
 
-      {}
+      {/* Delete Confirmation Modal */}
       <AnimatePresence>
         {isDeleteModalOpen && (
-          <>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
             <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[#11223a]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setIsDeleteModalOpen(false)}
+              className="absolute inset-0 bg-[#11223a]/40 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative z-10"
             >
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative"
-              >
-                <button 
-                  onClick={() => setIsDeleteModalOpen(false)}
-                  className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <X className="w-5 h-5" />
+              <button onClick={() => setIsDeleteModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+              
+              <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-6">
+                <AlertTriangle className="w-8 h-8 text-red-500" />
+              </div>
+              
+              <h3 className="text-2xl font-bold text-[#11223a] mb-2">Hapus Artikel?</h3>
+              <p className="text-gray-600 mb-8 text-sm">
+                Apakah Anda yakin ingin menghapus artikel <strong>"{blogToDelete?.title}"</strong>? Tindakan ini tidak dapat dibatalkan dan artikel akan terhapus dari website publik.
+              </p>
+              
+              <div className="flex gap-4">
+                <button onClick={() => setIsDeleteModalOpen(false)} className="flex-1 py-3.5 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">
+                  Batal
                 </button>
-                
-                <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-6">
-                  <AlertTriangle className="w-8 h-8 text-red-500" />
-                </div>
-                
-                <h3 className="text-2xl font-bold text-[#11223a] mb-2">Hapus Artikel?</h3>
-                <p className="text-gray-600 mb-8">
-                  Apakah Anda yakin ingin menghapus artikel <strong>"{blogToDelete?.title}"</strong>? Tindakan ini tidak dapat dibatalkan dan artikel akan terhapus dari website publik.
-                </p>
-                
-                <div className="flex gap-4">
-                  <button 
-                    onClick={() => setIsDeleteModalOpen(false)}
-                    className="flex-1 py-3.5 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
-                  >
-                    Batal
-                  </button>
-                  <button 
-                    onClick={executeDelete}
-                    disabled={isDeleting}
-                    className="flex-1 py-3.5 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
-                  >
-                    {isDeleting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Ya, Hapus'}
-                  </button>
-                </div>
-              </motion.div>
+                <button onClick={executeDelete} disabled={isDeleting} className="flex-1 py-3.5 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-70">
+                  {isDeleting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Ya, Hapus'}
+                </button>
+              </div>
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
     </>
