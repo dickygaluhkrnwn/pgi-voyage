@@ -478,5 +478,5 @@ export default function GalleryPage() {
       </AnimatePresence>
 
     </main>
-  );
+  );  
 }
