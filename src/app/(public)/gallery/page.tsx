@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { motion, Variants, AnimatePresence } from "framer-motion";
 import { 
   ArrowRight, 
@@ -15,7 +17,7 @@ import {
   Quote,
   Star,
   Calendar,
-  ChevronRight
+  Loader2
 } from "lucide-react";
 
 const fadeInUp: Variants = {
@@ -40,18 +42,11 @@ const categories = [
   { id: 'all', label: 'All Destinations', icon: Compass, subtitle: '', desc: '' },
   { id: 'vessel', label: 'KM Pulau Mas 88', icon: Ship, subtitle: 'The Flagship Vessel', desc: 'Engineered for adventure, designed for comfort. Explore the exterior and interior of our trusted sailing companion.' },
   { id: 'kenawa', label: 'Kenawa Island', icon: Mountain, subtitle: 'The Hidden Savannah', desc: 'A breathtaking hike leading to a panoramic view of golden grasslands and a tropical sunset.' },
-  { id: 'whaleshark', label: 'Saleh Bay', icon: Waves, subtitle: 'Gentle Giants', desc: 'An unforgettable underwater experience swimming alongside the majestic and peaceful whale sharks.' },
+  { id: 'whaleshark', label: 'Whale Sharks', icon: Waves, subtitle: 'Gentle Giants', desc: 'An unforgettable underwater experience swimming alongside the majestic and peaceful whale sharks.' },
   { id: 'komodo', label: 'Komodo Island', icon: MapPin, subtitle: 'The Jurassic Realm', desc: 'Step into the wild and encounter the legendary Komodo dragons in their natural, protected habitat.' },
   { id: 'pinkbeach', label: 'Pink Beach', icon: MapPin, subtitle: 'Pristine Shores', desc: 'Relax on striking pink sands and snorkel in the crystal-clear turquoise waters teeming with marine life.' },
   { id: 'padar', label: 'Padar Island', icon: Mountain, subtitle: 'The Iconic Viewpoint', desc: 'A breathtaking hike leading to a panoramic view of three uniquely colored bays. The crown jewel of the archipelago.' },
   { id: 'majarite', label: 'Majarite & Kelor', icon: Waves, subtitle: 'Snorkeling Paradise', desc: 'Explore colorful coral reefs, vibrant marine life, and relax on untouched white sandy beaches.' },
-];
-
-// --- TRIPS / VOYAGES DATA (Weekly Deployments) ---
-const trips = [
-  { id: 't3', name: 'Voyage Chapter 42', date: 'August 15 - 18, 2025' },
-  { id: 't2', name: 'Voyage Chapter 41', date: 'August 08 - 11, 2025' },
-  { id: 't1', name: 'Voyage Chapter 40', date: 'August 01 - 04, 2025' },
 ];
 
 // --- DUMMY DATA MEDIA ---
@@ -60,15 +55,17 @@ type MediaType = 'image' | 'reel';
 interface MediaItem {
   id: string;
   categoryId: string;
-  tripId?: string; // Tautan ke perjalanan mingguan
+  tripId?: string;
+  tripName?: string;
   type: MediaType;
   src: string;
   title: string;
   location: string;
+  createdAt?: any;
 }
 
 const dummyMedia: MediaItem[] = [
-  // REELS / VERTICAL SCROLL
+  // REELS
   { id: 'r1', categoryId: 'vessel', type: 'reel', src: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=600&auto=format&fit=crop', title: 'Sunset Boat Party', location: 'Onboard KM Pulau Mas 88' },
   { id: 'r2', categoryId: 'whaleshark', type: 'reel', src: 'https://images.unsplash.com/photo-1544776192-c8fa8b78a042?q=80&w=600&auto=format&fit=crop', title: 'Swimming with Giants', location: 'Saleh Bay' },
   { id: 'r3', categoryId: 'padar', type: 'reel', src: 'https://images.unsplash.com/photo-1534430480872-3498386e7856?q=80&w=600&auto=format&fit=crop', title: 'The Great Hike', location: 'Padar Island' },
@@ -77,40 +74,82 @@ const dummyMedia: MediaItem[] = [
   { id: 'r6', categoryId: 'kenawa', type: 'reel', src: 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?q=80&w=600&auto=format&fit=crop', title: 'Morning Savannah', location: 'Kenawa Island' },
   { id: 'r7', categoryId: 'majarite', type: 'reel', src: 'https://images.unsplash.com/photo-1518182170546-076616fd6dc7?q=80&w=600&auto=format&fit=crop', title: 'Snorkeling Fun', location: 'Majarite' },
 
-  // IMAGES (Assigned to different trips to show grouping)
-  // Voyage Chapter 42 (Latest)
-  { id: 'i1', tripId: 't3', categoryId: 'vessel', type: 'image', src: '/images/Kapal_Pulau_Mas_88.png', title: 'The Flagship Exterior', location: 'Sailing the Archipelago' },
-  { id: 'i2', tripId: 't3', categoryId: 'padar', type: 'image', src: 'https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=800&auto=format&fit=crop', title: 'Three Colored Bays', location: 'Padar Island' },
-  { id: 'i3', tripId: 't3', categoryId: 'whaleshark', type: 'image', src: 'https://images.unsplash.com/photo-1580580297368-c782fb65d271?q=80&w=800&auto=format&fit=crop', title: 'Whale Shark Encounter', location: 'Saleh Bay' },
-  { id: 'i4', tripId: 't3', categoryId: 'komodo', type: 'image', src: 'https://images.unsplash.com/photo-1717238977683-5f06a9e60694?q=80&w=800&auto=format&fit=crop', title: 'The Jurassic Dragon', location: 'Loh Liang Village' },
-  { id: 'i13', tripId: 't3', categoryId: 'padar', type: 'image', src: 'https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?q=80&w=800&auto=format&fit=crop', title: 'Hiking Trail', location: 'Padar Island' },
-
-  // Voyage Chapter 41
-  { id: 'i5', tripId: 't2', categoryId: 'pinkbeach', type: 'image', src: 'https://images.unsplash.com/photo-1724127722795-96efb9caffbc?q=80&w=800&auto=format&fit=crop', title: 'Pink Sands', location: 'Pink Beach' },
-  { id: 'i6', tripId: 't2', categoryId: 'kenawa', type: 'image', src: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?q=80&w=800&auto=format&fit=crop', title: 'Kenawa Hill Trek', location: 'Kenawa Island' },
-  { id: 'i7', tripId: 't2', categoryId: 'majarite', type: 'image', src: 'https://images.unsplash.com/photo-1544550581-5f7ceaf7f992?q=80&w=800&auto=format&fit=crop', title: 'Snorkeling Paradise', location: 'Majarite Island' },
-  { id: 'i14', tripId: 't2', categoryId: 'komodo', type: 'image', src: 'https://images.unsplash.com/photo-1621251392686-22441dbf022c?q=80&w=800&auto=format&fit=crop', title: 'Wild Sunset', location: 'Komodo Island' },
-  { id: 'i15', tripId: 't2', categoryId: 'vessel', type: 'image', src: 'https://images.unsplash.com/photo-1505228395891-9a51e7e86bf6?q=80&w=800&auto=format&fit=crop', title: 'Dinner Onboard', location: 'Flores Sea' },
-
-  // Voyage Chapter 40
-  { id: 'i8', tripId: 't1', categoryId: 'padar', type: 'image', src: 'https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=800&auto=format&fit=crop', title: 'Summit View', location: 'Padar Island' },
-  { id: 'i9', tripId: 't1', categoryId: 'whaleshark', type: 'image', src: 'https://images.unsplash.com/photo-1620063229712-1e9d1a3ed9d9?q=80&w=800&auto=format&fit=crop', title: 'Into the Deep', location: 'Saleh Bay' },
-  { id: 'i10', tripId: 't1', categoryId: 'pinkbeach', type: 'image', src: 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?q=80&w=800&auto=format&fit=crop', title: 'Calm Waves', location: 'Pink Beach' },
-  { id: 'i11', tripId: 't1', categoryId: 'majarite', type: 'image', src: 'https://images.unsplash.com/photo-1590523264285-a55d491038cc?q=80&w=800&auto=format&fit=crop', title: 'Kelor Hilltop', location: 'Kelor Island' },
-  { id: 'i12', tripId: 't1', categoryId: 'vessel', type: 'image', src: 'https://images.unsplash.com/photo-1562281302-809108df5e47?q=80&w=800&auto=format&fit=crop', title: 'Cabin Comfort', location: 'Interior' },
+  // IMAGES
+  { id: 'i1', tripId: 't3', tripName: 'Voyage Chapter 42', categoryId: 'vessel', type: 'image', src: '/images/Kapal_Pulau_Mas_88.png', title: 'The Flagship Exterior', location: 'Sailing the Archipelago' },
+  { id: 'i2', tripId: 't3', tripName: 'Voyage Chapter 42', categoryId: 'padar', type: 'image', src: 'https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=800&auto=format&fit=crop', title: 'Three Colored Bays', location: 'Padar Island' },
+  { id: 'i3', tripId: 't3', tripName: 'Voyage Chapter 42', categoryId: 'whaleshark', type: 'image', src: 'https://images.unsplash.com/photo-1580580297368-c782fb65d271?q=80&w=800&auto=format&fit=crop', title: 'Whale Shark Encounter', location: 'Saleh Bay' },
+  { id: 'i4', tripId: 't3', tripName: 'Voyage Chapter 42', categoryId: 'komodo', type: 'image', src: 'https://images.unsplash.com/photo-1717238977683-5f06a9e60694?q=80&w=800&auto=format&fit=crop', title: 'The Jurassic Dragon', location: 'Loh Liang Village' },
+  { id: 'i13', tripId: 't3', tripName: 'Voyage Chapter 42', categoryId: 'padar', type: 'image', src: 'https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?q=80&w=800&auto=format&fit=crop', title: 'Hiking Trail', location: 'Padar Island' },
+  { id: 'i5', tripId: 't2', tripName: 'Voyage Chapter 41', categoryId: 'pinkbeach', type: 'image', src: 'https://images.unsplash.com/photo-1724127722795-96efb9caffbc?q=80&w=800&auto=format&fit=crop', title: 'Pink Sands', location: 'Pink Beach' },
+  { id: 'i6', tripId: 't2', tripName: 'Voyage Chapter 41', categoryId: 'kenawa', type: 'image', src: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?q=80&w=800&auto=format&fit=crop', title: 'Kenawa Hill Trek', location: 'Kenawa Island' },
+  { id: 'i7', tripId: 't2', tripName: 'Voyage Chapter 41', categoryId: 'majarite', type: 'image', src: 'https://images.unsplash.com/photo-1544550581-5f7ceaf7f992?q=80&w=800&auto=format&fit=crop', title: 'Snorkeling Paradise', location: 'Majarite Island' },
+  { id: 'i14', tripId: 't2', tripName: 'Voyage Chapter 41', categoryId: 'komodo', type: 'image', src: 'https://images.unsplash.com/photo-1621251392686-22441dbf022c?q=80&w=800&auto=format&fit=crop', title: 'Wild Sunset', location: 'Komodo Island' },
+  { id: 'i15', tripId: 't2', tripName: 'Voyage Chapter 41', categoryId: 'vessel', type: 'image', src: 'https://images.unsplash.com/photo-1505228395891-9a51e7e86bf6?q=80&w=800&auto=format&fit=crop', title: 'Dinner Onboard', location: 'Flores Sea' },
+  { id: 'i8', tripId: 't1', tripName: 'Voyage Chapter 40', categoryId: 'padar', type: 'image', src: 'https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=800&auto=format&fit=crop', title: 'Summit View', location: 'Padar Island' },
+  { id: 'i9', tripId: 't1', tripName: 'Voyage Chapter 40', categoryId: 'whaleshark', type: 'image', src: 'https://images.unsplash.com/photo-1620063229712-1e9d1a3ed9d9?q=80&w=800&auto=format&fit=crop', title: 'Into the Deep', location: 'Saleh Bay' },
+  { id: 'i10', tripId: 't1', tripName: 'Voyage Chapter 40', categoryId: 'pinkbeach', type: 'image', src: 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?q=80&w=800&auto=format&fit=crop', title: 'Calm Waves', location: 'Pink Beach' },
+  { id: 'i11', tripId: 't1', tripName: 'Voyage Chapter 40', categoryId: 'majarite', type: 'image', src: 'https://images.unsplash.com/photo-1590523264285-a55d491038cc?q=80&w=800&auto=format&fit=crop', title: 'Kelor Hilltop', location: 'Kelor Island' },
+  { id: 'i12', tripId: 't1', tripName: 'Voyage Chapter 40', categoryId: 'vessel', type: 'image', src: 'https://images.unsplash.com/photo-1562281302-809108df5e47?q=80&w=800&auto=format&fit=crop', title: 'Cabin Comfort', location: 'Interior' },
 ];
+
+// Helper untuk menghasilkan pola grid yang dinamis
+const getGridSpanClass = (index: number) => {
+  // Pola berulang setiap 7 item untuk kesan masonry yang terstruktur
+  const patternIndex = index % 7;
+  
+  switch (patternIndex) {
+    case 0: return "col-span-2 md:col-span-2 row-span-2"; // Item besar
+    case 3: return "col-span-1 md:col-span-2 row-span-1"; // Item melebar
+    case 6: return "col-span-1 md:col-span-1 row-span-2"; // Item meninggi
+    default: return "col-span-1 row-span-1";              // Item standar
+  }
+};
 
 export default function GalleryPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [lightboxItem, setLightboxItem] = useState<MediaItem | null>(null);
+  
+  // States for fetching data from Firestore
+  const [mediaList, setMediaList] = useState<MediaItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const waNumber = "6287817865690";
   const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20PGI%20Voyage,%20I%20saw%20your%20amazing%20gallery%20and%20want%20to%20book%20a%20trip!`;
 
+  // Ambil data galeri dari Firestore "galleries"
+  useEffect(() => {
+    const fetchGallery = async () => {
+      try {
+        const q = query(collection(db, 'galleries'), orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        
+        const data: MediaItem[] = [];
+        querySnapshot.forEach((doc) => {
+          data.push({ id: doc.id, ...doc.data() } as MediaItem);
+        });
+        
+        if (data.length > 0) {
+          setMediaList(data);
+        } else {
+          // Fallback jika belum ada data sama sekali di Firestore
+          setMediaList(dummyMedia);
+        }
+      } catch (error) {
+        console.error("Error fetching gallery:", error);
+        // Fallback jika gagal fetch
+        setMediaList(dummyMedia);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGallery();
+  }, []);
+
   // Filter media based on active tab
   const filteredMedia = activeTab === 'all' 
-    ? dummyMedia 
-    : dummyMedia.filter(m => m.categoryId === activeTab);
+    ? mediaList 
+    : mediaList.filter(m => m.categoryId === activeTab);
 
   const reels = filteredMedia.filter(m => m.type === 'reel');
   const images = filteredMedia.filter(m => m.type === 'image');
@@ -176,222 +215,206 @@ export default function GalleryPage() {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto w-full px-6 lg:px-12 py-12 space-y-24">
+      <div className="max-w-7xl mx-auto w-full px-6 lg:px-12 py-12 space-y-24 min-h-[50vh]">
         
-        {/* 3. REELS / STORY HIGHLIGHTS (Always visible at the top, filtered by tab) */}
-        {reels.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-3xl font-bold text-[#11223a] flex items-center gap-3">
-                  Trip Stories
-                  <span className="bg-red-500 text-white text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full animate-pulse">Hot</span>
-                </h2>
-                <p className="text-gray-500 mt-2">Breathtaking vertical moments from our recent voyages.</p>
-              </div>
-            </div>
-            
-            <div className="flex overflow-x-auto hide-scrollbar gap-6 pb-8 snap-x scroll-smooth">
-              <AnimatePresence>
-                {reels.map((reel) => (
-                  <motion.div
-                    key={reel.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.4 }}
-                    onClick={() => setLightboxItem(reel)}
-                    className="relative shrink-0 w-64 h-[420px] rounded-3xl overflow-hidden cursor-pointer group snap-center shadow-lg bg-gray-200"
-                  >
-                    <img src={reel.src} alt={reel.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/90 via-transparent to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-14 h-14 bg-white/20 backdrop-blur-md border border-white/40 rounded-full flex items-center justify-center text-white transform group-hover:scale-110 transition-transform shadow-xl">
-                        <Play className="w-6 h-6 ml-1 fill-white" />
-                      </div>
-                    </div>
-                    <div className="absolute bottom-6 left-6 right-6">
-                      <h3 className="text-white font-bold text-lg leading-tight mb-1">{reel.title}</h3>
-                      <p className="text-white/80 text-xs flex items-center gap-1">
-                        <MapPin className="w-3 h-3" /> {reel.location}
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </section>
-        )}
-
-        {/* 4. MAIN CONTENT AREA */}
-        
-        {/* SCENARIO A: 'ALL' TAB (Editorial Layout grouped by destination) */}
-        {activeTab === 'all' && (
-          <div className="space-y-32">
-            {editorialCategories.map((cat, index) => {
-              // Grab up to 3 images for the preview bento grid
-              const catImages = dummyMedia.filter(m => m.categoryId === cat.id && m.type === 'image').slice(0, 3);
-              if (catImages.length === 0) return null;
-
-              return (
-                <motion.section 
-                  key={cat.id}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, margin: "-100px" }}
-                  variants={staggerContainer}
-                  className={`flex flex-col ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-12 lg:gap-20`}
-                >
-                  {/* Sticky Sidebar Text */}
-                  <div className="w-full lg:w-1/3">
-                    <motion.div variants={fadeInUp} className="sticky top-40">
-                      <div className="w-14 h-14 rounded-2xl bg-white border border-[#B88E52]/20 flex items-center justify-center mb-6 shadow-sm">
-                        <cat.icon className="w-6 h-6 text-[#B88E52]" />
-                      </div>
-                      <span className="text-[#B88E52] font-semibold tracking-wider uppercase text-sm mb-2 block">
-                        {cat.subtitle}
-                      </span>
-                      <h2 className="text-3xl md:text-4xl font-bold text-[#11223a] mb-6">
-                        {cat.label}
-                      </h2>
-                      <p className="text-gray-600 text-lg leading-relaxed mb-8">
-                        {cat.desc}
-                      </p>
-                      <button 
-                        onClick={() => {
-                          setActiveTab(cat.id);
-                          window.scrollTo({ top: window.innerHeight * 0.5, behavior: 'smooth' });
-                        }}
-                        className="group inline-flex items-center gap-2 text-[#11223a] font-bold border-b-2 border-[#11223a] pb-1 hover:text-[#B88E52] hover:border-[#B88E52] transition-colors"
-                      >
-                        Explore More Photos <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
-                      </button>
-                    </motion.div>
-                  </div>
-
-                  {/* Bento Grid Layout */}
-                  <div className="w-full lg:w-2/3">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 auto-rows-[200px] md:auto-rows-[250px] grid-flow-dense">
-                      {catImages.map((image, imgIdx) => {
-                        // Create a premium bento box structure
-                        const spanClass = imgIdx === 0 
-                          ? "col-span-2 md:col-span-2 row-span-2" 
-                          : "col-span-1 row-span-1";
-
-                        return (
-                          <motion.div
-                            key={image.id}
-                            variants={fadeInUp}
-                            onClick={() => setLightboxItem(image)}
-                            className={`relative overflow-hidden rounded-[2rem] group cursor-pointer bg-gray-200 shadow-md ${spanClass}`}
-                          >
-                            <img
-                              src={image.src}
-                              alt={image.title}
-                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            />
-                            <div className="absolute inset-0 bg-[#11223a]/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 p-4 text-center">
-                              <span className="bg-white/90 backdrop-blur-sm text-[#11223a] font-bold text-sm uppercase tracking-widest px-6 py-2.5 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
-                                Expand
-                              </span>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </motion.section>
-              );
-            })}
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+             <Loader2 className="w-12 h-12 text-[#B88E52] animate-spin mb-4" />
+             <p className="text-gray-500 font-medium">Memuat mahakarya perjalanan...</p>
           </div>
-        )}
-
-        {/* SCENARIO B: SPECIFIC CATEGORY TAB (Voyage Chapters Layout) */}
-        {activeTab !== 'all' && images.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-16"
-          >
-            <div className="mb-12 border-b border-gray-200 pb-8">
-              <h2 className="text-3xl md:text-4xl font-bold text-[#11223a]">Expedition Archives</h2>
-              <p className="text-gray-500 mt-2 text-lg">Browse moments captured from our weekly voyages.</p>
-            </div>
-
-            {/* Loop through each trip and only show if they have images in this category */}
-            {trips.map((trip) => {
-              const tripImages = images.filter(img => img.tripId === trip.id);
-              if (tripImages.length === 0) return null;
-
-              return (
-                <div key={trip.id} className="relative">
-                  <div className="flex flex-col xl:flex-row gap-8 lg:gap-12">
-                    
-                    {/* Trip Info Sidebar */}
-                    <div className="w-full xl:w-1/4 shrink-0">
-                      <div className="sticky top-48">
-                        <div className="inline-flex items-center gap-2 text-[#B88E52] mb-3">
-                          <Calendar className="w-4 h-4" />
-                          <span className="font-bold text-xs uppercase tracking-wider">{trip.date}</span>
+        ) : (
+          <>
+            {/* 3. REELS / STORY HIGHLIGHTS */}
+            {reels.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h2 className="text-3xl font-bold text-[#11223a] flex items-center gap-3">
+                      Trip Stories
+                      <span className="bg-red-500 text-white text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full animate-pulse">Hot</span>
+                    </h2>
+                    <p className="text-gray-500 mt-2">Breathtaking vertical moments from our recent voyages.</p>
+                  </div>
+                </div>
+                
+                <div className="flex overflow-x-auto hide-scrollbar gap-6 pb-8 snap-x scroll-smooth">
+                  <AnimatePresence>
+                    {reels.map((reel) => (
+                      <motion.div
+                        key={reel.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.4 }}
+                        onClick={() => setLightboxItem(reel)}
+                        className="relative shrink-0 w-64 h-[420px] rounded-3xl overflow-hidden cursor-pointer group snap-center shadow-lg bg-gray-200"
+                      >
+                        <img src={reel.src} alt={reel.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/90 via-transparent to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-14 h-14 bg-white/20 backdrop-blur-md border border-white/40 rounded-full flex items-center justify-center text-white transform group-hover:scale-110 transition-transform shadow-xl">
+                            <Play className="w-6 h-6 ml-1 fill-white" />
+                          </div>
                         </div>
-                        <h3 className="text-2xl font-bold text-[#11223a] mb-2">{trip.name}</h3>
-                        <p className="text-gray-500 text-sm">
-                          {tripImages.length} memories captured
-                        </p>
-                      </div>
-                    </div>
+                        <div className="absolute bottom-6 left-6 right-6">
+                          <h3 className="text-white font-bold text-lg leading-tight mb-1">{reel.title}</h3>
+                          <p className="text-white/80 text-xs flex items-center gap-1">
+                            <MapPin className="w-3 h-3" /> {reel.location}
+                          </p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </section>
+            )}
 
-                    {/* Trip Photos - Horizontal Scroll for modern premium look */}
-                    <div className="w-full xl:w-3/4 flex overflow-x-auto hide-scrollbar gap-4 pb-8 snap-x scroll-smooth">
-                      {tripImages.map((image) => (
-                        <div
-                          key={image.id}
-                          onClick={() => setLightboxItem(image)}
-                          className="relative shrink-0 w-72 h-80 sm:w-80 sm:h-96 rounded-2xl overflow-hidden cursor-pointer group snap-center shadow-md bg-gray-200"
-                        >
-                          <img 
-                            src={image.src} 
-                            alt={image.title} 
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            loading="lazy"
-                          />
-                          <div className="absolute inset-0 bg-[#11223a]/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-                            <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                              <h3 className="text-white font-bold text-lg mb-1">{image.title}</h3>
+            {/* 4. MAIN CONTENT AREA */}
+            
+            {/* SCENARIO A: 'ALL' TAB */}
+            {activeTab === 'all' && (
+              <div className="space-y-32">
+                {editorialCategories.map((cat, index) => {
+                  const catImages = mediaList.filter(m => m.categoryId === cat.id && m.type === 'image').slice(0, 4); // Ubah jadi 4 agar pola grid pas
+                  if (catImages.length === 0) return null;
+
+                  return (
+                    <motion.section 
+                      key={cat.id}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={{ once: true, margin: "-100px" }}
+                      variants={staggerContainer}
+                      className={`flex flex-col ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-12 lg:gap-20`}
+                    >
+                      <div className="w-full lg:w-1/3">
+                        <motion.div variants={fadeInUp} className="sticky top-40">
+                          <div className="w-14 h-14 rounded-2xl bg-white border border-[#B88E52]/20 flex items-center justify-center mb-6 shadow-sm">
+                            <cat.icon className="w-6 h-6 text-[#B88E52]" />
+                          </div>
+                          <span className="text-[#B88E52] font-semibold tracking-wider uppercase text-sm mb-2 block">
+                            {cat.subtitle}
+                          </span>
+                          <h2 className="text-3xl md:text-4xl font-bold text-[#11223a] mb-6">
+                            {cat.label}
+                          </h2>
+                          <p className="text-gray-600 text-lg leading-relaxed mb-8">
+                            {cat.desc}
+                          </p>
+                          <button 
+                            onClick={() => {
+                              setActiveTab(cat.id);
+                              window.scrollTo({ top: window.innerHeight * 0.5, behavior: 'smooth' });
+                            }}
+                            className="group inline-flex items-center gap-2 text-[#11223a] font-bold border-b-2 border-[#11223a] pb-1 hover:text-[#B88E52] hover:border-[#B88E52] transition-colors"
+                          >
+                            Explore More Photos <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+                          </button>
+                        </motion.div>
+                      </div>
+
+                      <div className="w-full lg:w-2/3">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 auto-rows-[150px] md:auto-rows-[200px] grid-flow-dense">
+                          {catImages.map((image, imgIdx) => {
+                            const spanClass = getGridSpanClass(imgIdx);
+
+                            return (
+                              <motion.div
+                                key={image.id}
+                                variants={fadeInUp}
+                                onClick={() => setLightboxItem(image)}
+                                className={`relative overflow-hidden rounded-[2rem] group cursor-pointer bg-gray-200 shadow-md ${spanClass}`}
+                              >
+                                <img
+                                  src={image.src}
+                                  alt={image.title}
+                                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                />
+                                <div className="absolute inset-0 bg-[#11223a]/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 p-4 text-center">
+                                  <span className="bg-white/90 backdrop-blur-sm text-[#11223a] font-bold text-sm uppercase tracking-widest px-6 py-2.5 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                                    Expand
+                                  </span>
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </motion.section>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* SCENARIO B: SPECIFIC CATEGORY TAB (Dynamic Bento Grid Layout) */}
+            {activeTab !== 'all' && images.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-12"
+              >
+                <div className="mb-8 border-b border-gray-200 pb-8">
+                  <h2 className="text-3xl md:text-4xl font-bold text-[#11223a]">
+                    {categories.find(c => c.id === activeTab)?.label} Gallery
+                  </h2>
+                  <p className="text-gray-500 mt-2 text-lg">Browse all captured moments for this destination.</p>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 auto-rows-[150px] md:auto-rows-[250px] grid-flow-dense">
+                  {images.map((image, index) => {
+                    // Terapkan fungsi helper untuk pola grid yang bervariasi
+                    const spanClass = getGridSpanClass(index);
+
+                    return (
+                      <motion.div
+                        key={image.id}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.4 }}
+                        onClick={() => setLightboxItem(image)}
+                        className={`break-inside-avoid relative rounded-2xl overflow-hidden cursor-pointer group shadow-sm bg-gray-200 ${spanClass}`}
+                      >
+                        <img 
+                          src={image.src} 
+                          alt={image.title} 
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-[#11223a]/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                          <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                            <h3 className="text-white font-bold text-lg mb-1 line-clamp-1">{image.title}</h3>
+                            <div className="flex flex-col gap-1">
                               <p className="text-[#B88E52] text-sm flex items-center gap-1 font-medium">
                                 <MapPin className="w-3.5 h-3.5" /> {image.location}
                               </p>
+                              {image.tripName && (
+                                <p className="text-gray-300 text-xs flex items-center gap-1 line-clamp-1">
+                                  <Calendar className="w-3 h-3 shrink-0" /> {image.tripName}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </div>
-                      ))}
-                      
-                      {/* Decorative "End of Album" Card */}
-                      <div className="relative shrink-0 w-32 h-80 sm:h-96 rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center snap-center opacity-50">
-                        <Camera className="w-6 h-6 text-gray-400 mb-2" />
-                        <span className="text-xs text-gray-400 uppercase tracking-widest font-bold rotate-90 mt-8">End of Album</span>
-                      </div>
-                    </div>
-
-                  </div>
+                      </motion.div>
+                    )
+                  })}
                 </div>
-              );
-            })}
-          </motion.div>
-        )}
+              </motion.div>
+            )}
 
-        {/* Empty State */}
-        {filteredMedia.length === 0 && (
-          <div className="text-center py-20">
-            <Camera className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-gray-400">Moments are being prepared...</h3>
-            <p className="text-gray-500 mt-2">Our crew is currently capturing amazing moments for this destination.</p>
-          </div>
+            {/* Empty State */}
+            {filteredMedia.length === 0 && (
+              <div className="text-center py-20">
+                <Camera className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold text-gray-400">Moments are being prepared...</h3>
+                <p className="text-gray-500 mt-2">Our crew is currently capturing amazing moments for this destination.</p>
+              </div>
+            )}
+          </>
         )}
-
       </div>
 
       {/* SOCIAL PROOF / TESTIMONIAL BANNER */}
