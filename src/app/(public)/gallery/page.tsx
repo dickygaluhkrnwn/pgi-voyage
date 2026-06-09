@@ -14,8 +14,6 @@ import {
   Ship,
   Waves,
   Mountain,
-  Quote,
-  Star,
   Calendar,
   Loader2
 } from "lucide-react";
@@ -49,7 +47,6 @@ const categories = [
   { id: 'majarite', label: 'Majarite & Kelor', icon: Waves, subtitle: 'Snorkeling Paradise', desc: 'Explore colorful coral reefs, vibrant marine life, and relax on untouched white sandy beaches.' },
 ];
 
-// --- DUMMY DATA MEDIA ---
 type MediaType = 'image' | 'reel';
 
 interface MediaItem {
@@ -63,34 +60,6 @@ interface MediaItem {
   location: string;
   createdAt?: any;
 }
-
-const dummyMedia: MediaItem[] = [
-  // REELS
-  { id: 'r1', categoryId: 'vessel', type: 'reel', src: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=600&auto=format&fit=crop', title: 'Sunset Boat Party', location: 'Onboard KM Pulau Mas 88' },
-  { id: 'r2', categoryId: 'whaleshark', type: 'reel', src: 'https://images.unsplash.com/photo-1544776192-c8fa8b78a042?q=80&w=600&auto=format&fit=crop', title: 'Swimming with Giants', location: 'Saleh Bay' },
-  { id: 'r3', categoryId: 'padar', type: 'reel', src: 'https://images.unsplash.com/photo-1534430480872-3498386e7856?q=80&w=600&auto=format&fit=crop', title: 'The Great Hike', location: 'Padar Island' },
-  { id: 'r4', categoryId: 'pinkbeach', type: 'reel', src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop', title: 'Crystal Clear Water', location: 'Pink Beach' },
-  { id: 'r5', categoryId: 'komodo', type: 'reel', src: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?q=80&w=600&auto=format&fit=crop', title: 'Footsteps of the Dragon', location: 'Komodo Island' },
-  { id: 'r6', categoryId: 'kenawa', type: 'reel', src: 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?q=80&w=600&auto=format&fit=crop', title: 'Morning Savannah', location: 'Kenawa Island' },
-  { id: 'r7', categoryId: 'majarite', type: 'reel', src: 'https://images.unsplash.com/photo-1518182170546-076616fd6dc7?q=80&w=600&auto=format&fit=crop', title: 'Snorkeling Fun', location: 'Majarite' },
-
-  // IMAGES
-  { id: 'i1', tripId: 't3', tripName: 'Voyage Chapter 42', categoryId: 'vessel', type: 'image', src: '/images/Kapal_Pulau_Mas_88.png', title: 'The Flagship Exterior', location: 'Sailing the Archipelago' },
-  { id: 'i2', tripId: 't3', tripName: 'Voyage Chapter 42', categoryId: 'padar', type: 'image', src: 'https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=800&auto=format&fit=crop', title: 'Three Colored Bays', location: 'Padar Island' },
-  { id: 'i3', tripId: 't3', tripName: 'Voyage Chapter 42', categoryId: 'whaleshark', type: 'image', src: 'https://images.unsplash.com/photo-1580580297368-c782fb65d271?q=80&w=800&auto=format&fit=crop', title: 'Whale Shark Encounter', location: 'Saleh Bay' },
-  { id: 'i4', tripId: 't3', tripName: 'Voyage Chapter 42', categoryId: 'komodo', type: 'image', src: 'https://images.unsplash.com/photo-1717238977683-5f06a9e60694?q=80&w=800&auto=format&fit=crop', title: 'The Jurassic Dragon', location: 'Loh Liang Village' },
-  { id: 'i13', tripId: 't3', tripName: 'Voyage Chapter 42', categoryId: 'padar', type: 'image', src: 'https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?q=80&w=800&auto=format&fit=crop', title: 'Hiking Trail', location: 'Padar Island' },
-  { id: 'i5', tripId: 't2', tripName: 'Voyage Chapter 41', categoryId: 'pinkbeach', type: 'image', src: 'https://images.unsplash.com/photo-1724127722795-96efb9caffbc?q=80&w=800&auto=format&fit=crop', title: 'Pink Sands', location: 'Pink Beach' },
-  { id: 'i6', tripId: 't2', tripName: 'Voyage Chapter 41', categoryId: 'kenawa', type: 'image', src: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?q=80&w=800&auto=format&fit=crop', title: 'Kenawa Hill Trek', location: 'Kenawa Island' },
-  { id: 'i7', tripId: 't2', tripName: 'Voyage Chapter 41', categoryId: 'majarite', type: 'image', src: 'https://images.unsplash.com/photo-1544550581-5f7ceaf7f992?q=80&w=800&auto=format&fit=crop', title: 'Snorkeling Paradise', location: 'Majarite Island' },
-  { id: 'i14', tripId: 't2', tripName: 'Voyage Chapter 41', categoryId: 'komodo', type: 'image', src: 'https://images.unsplash.com/photo-1621251392686-22441dbf022c?q=80&w=800&auto=format&fit=crop', title: 'Wild Sunset', location: 'Komodo Island' },
-  { id: 'i15', tripId: 't2', tripName: 'Voyage Chapter 41', categoryId: 'vessel', type: 'image', src: 'https://images.unsplash.com/photo-1505228395891-9a51e7e86bf6?q=80&w=800&auto=format&fit=crop', title: 'Dinner Onboard', location: 'Flores Sea' },
-  { id: 'i8', tripId: 't1', tripName: 'Voyage Chapter 40', categoryId: 'padar', type: 'image', src: 'https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=800&auto=format&fit=crop', title: 'Summit View', location: 'Padar Island' },
-  { id: 'i9', tripId: 't1', tripName: 'Voyage Chapter 40', categoryId: 'whaleshark', type: 'image', src: 'https://images.unsplash.com/photo-1620063229712-1e9d1a3ed9d9?q=80&w=800&auto=format&fit=crop', title: 'Into the Deep', location: 'Saleh Bay' },
-  { id: 'i10', tripId: 't1', tripName: 'Voyage Chapter 40', categoryId: 'pinkbeach', type: 'image', src: 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?q=80&w=800&auto=format&fit=crop', title: 'Calm Waves', location: 'Pink Beach' },
-  { id: 'i11', tripId: 't1', tripName: 'Voyage Chapter 40', categoryId: 'majarite', type: 'image', src: 'https://images.unsplash.com/photo-1590523264285-a55d491038cc?q=80&w=800&auto=format&fit=crop', title: 'Kelor Hilltop', location: 'Kelor Island' },
-  { id: 'i12', tripId: 't1', tripName: 'Voyage Chapter 40', categoryId: 'vessel', type: 'image', src: 'https://images.unsplash.com/photo-1562281302-809108df5e47?q=80&w=800&auto=format&fit=crop', title: 'Cabin Comfort', location: 'Interior' },
-];
 
 // Helper untuk menghasilkan pola grid yang dinamis
 const getGridSpanClass = (index: number) => {
@@ -128,16 +97,9 @@ export default function GalleryPage() {
           data.push({ id: doc.id, ...doc.data() } as MediaItem);
         });
         
-        if (data.length > 0) {
-          setMediaList(data);
-        } else {
-          // Fallback jika belum ada data sama sekali di Firestore
-          setMediaList(dummyMedia);
-        }
+        setMediaList(data);
       } catch (error) {
         console.error("Error fetching gallery:", error);
-        // Fallback jika gagal fetch
-        setMediaList(dummyMedia);
       } finally {
         setIsLoading(false);
       }
@@ -250,7 +212,7 @@ export default function GalleryPage() {
                         onClick={() => setLightboxItem(reel)}
                         className="relative shrink-0 w-64 h-[420px] rounded-3xl overflow-hidden cursor-pointer group snap-center shadow-lg bg-gray-200"
                       >
-                        <img src={reel.src} alt={reel.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <video src={reel.src} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" muted loop playsInline autoPlay />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/90 via-transparent to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="w-14 h-14 bg-white/20 backdrop-blur-md border border-white/40 rounded-full flex items-center justify-center text-white transform group-hover:scale-110 transition-transform shadow-xl">
@@ -417,35 +379,6 @@ export default function GalleryPage() {
         )}
       </div>
 
-      {/* SOCIAL PROOF / TESTIMONIAL BANNER */}
-      <section className="py-24 px-6 lg:px-12 bg-white border-y border-gray-100">
-        <div className="max-w-5xl mx-auto bg-[#fdfaf5] rounded-[3rem] p-10 md:p-16 border border-[#B88E52]/20 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl pointer-events-none -translate-x-1/2 -translate-y-1/2"></div>
-          <Quote className="absolute top-8 right-10 md:right-16 w-24 h-24 text-[#B88E52]/10 rotate-180 pointer-events-none" />
-          
-          <div className="flex flex-col md:flex-row items-center gap-12 relative z-10">
-            <div className="relative shrink-0">
-              <div className="absolute inset-0 bg-[#B88E52] rounded-full blur-md opacity-30 transform translate-y-2"></div>
-              <img 
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop" 
-                alt="Happy Guest" 
-                className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white relative z-10"
-              />
-            </div>
-            <div>
-              <div className="flex gap-1 text-[#B88E52] mb-6">
-                {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-current" />)}
-              </div>
-              <h4 className="text-2xl md:text-3xl font-serif italic text-[#11223a] mb-6 leading-relaxed font-light">
-                "The most incredible 4 days of my life. The crew was impeccable, the food was gourmet, and waking up to the Komodo sunrise from our cabin was pure magic."
-              </h4>
-              <p className="font-bold text-[#11223a] text-lg">— Marcus & Elena</p>
-              <p className="text-[#B88E52] font-semibold text-sm uppercase tracking-wider mt-1">Explored in August 2025</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* INSTAGRAM CTA */}
       <section className="py-24 px-6 text-center bg-[#f8f9fa] mt-10">
         <motion.div 
@@ -500,9 +433,9 @@ export default function GalleryPage() {
             >
               {lightboxItem.type === 'reel' ? (
                  <div className="relative w-full aspect-[9/16] bg-gray-900 rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/20">
-                   <img src={lightboxItem.src} alt={lightboxItem.title} className="w-full h-full object-cover" />
-                   <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-black/60 to-transparent"></div>
-                   <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black/80 to-transparent p-6 flex flex-col justify-end">
+                   <video src={lightboxItem.src} className="w-full h-full object-cover" controls autoPlay playsInline />
+                   <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-black/60 to-transparent pointer-events-none"></div>
+                   <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black/80 to-transparent p-6 flex flex-col justify-end pointer-events-none">
                      <h3 className="text-white text-2xl font-bold mb-2">{lightboxItem.title}</h3>
                      <p className="text-white/80 flex items-center gap-1"><MapPin className="w-4 h-4"/> {lightboxItem.location}</p>
                    </div>
