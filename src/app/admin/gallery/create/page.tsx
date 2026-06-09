@@ -73,9 +73,9 @@ export default function CreateGalleryMediaPage() {
 
   // Handle pemilihan file (dari klik atau drop)
   const processFile = (selectedFile: File) => {
-    // Validasi ukuran (contoh: max 10MB)
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      setError("Ukuran file terlalu besar. Maksimal 10MB.");
+    // Validasi ukuran (contoh: max 99MB)
+    if (selectedFile.size > 99 * 1024 * 1024) {
+      setError("Ukuran file terlalu besar. Maksimal 99MB.");
       return;
     }
     
