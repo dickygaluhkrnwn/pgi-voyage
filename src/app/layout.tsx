@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import MetaPixel from "@/components/MetaPixel";
+import GoogleTagManager from "@/components/GoogleTagManager";
 import { Analytics } from "@vercel/analytics/next"; // <-- 1. Impor Vercel Analytics di sini
 
 const geistSans = Geist({
@@ -55,8 +56,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {/* Tracking Scripts (Google & Meta) */}
+        {/* Tracking Scripts (Google, Meta, & GTM) */}
         <Suspense fallback={null}>
+          <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID || "GTM-XXXXXXX"} />
           <GoogleAnalytics GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GA_ID || "G-XXXXXXXXXX"} />
           <MetaPixel PIXEL_ID={process.env.NEXT_PUBLIC_META_PIXEL_ID || "XXXXXXXXXXXXXXX"} />
         </Suspense>

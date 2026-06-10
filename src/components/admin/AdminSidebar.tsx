@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   Ship,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Map
 } from 'lucide-react';
 
 // Menu tersisa setelah B2C dan B2B dihapus
@@ -23,6 +24,7 @@ const sidebarLinks = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Blog & Journal', href: '/admin/blog', icon: BookOpen },
   { name: 'Gallery Assets', href: '/admin/gallery', icon: ImageIcon },
+  { name: 'Expedition', href: '/admin/expedition', icon: Map },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
