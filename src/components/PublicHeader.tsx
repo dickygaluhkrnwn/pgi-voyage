@@ -50,20 +50,25 @@ export default function PublicHeader() {
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between">
           
-          {/* LOGO */}
+          {/* LOGO & BRANDING */}
           <div className="flex items-center gap-3">
             <a href="/" className="group flex items-center gap-3">
-              <div className="bg-white/95 p-1.5 rounded-xl backdrop-blur-sm shadow-md transition-transform duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-[#B88E52]/20">
+              {/* Bulat Logo Wrapper */}
+              <div className="bg-white/95 p-1 rounded-full backdrop-blur-sm shadow-md transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-[#B88E52]/20 flex items-center justify-center overflow-hidden w-11 h-11 border border-white/20">
                 <img 
                   src="/LOGO-KOMODO-GILI.png" 
-                  alt="PGI Voyage Logo" 
-                  className="h-10 w-auto object-contain"
+                  alt="PMM Voyage Logo" 
+                  className="h-full w-full object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement!.innerHTML = '<span class="text-[#11223a] font-bold text-xl px-2 tracking-widest">PGI VOYAGE</span>';
+                    e.currentTarget.parentElement!.innerHTML = '<span class="text-[#11223a] font-bold text-xs">PMM</span>';
                   }}
                 />
               </div>
+              {/* Teks Branding PMM Voyage */}
+              <span className="text-white font-bold text-lg tracking-wider group-hover:text-[#B88E52] transition-colors duration-300 font-sans">
+                PMM Voyage
+              </span>
             </a>
           </div>
           

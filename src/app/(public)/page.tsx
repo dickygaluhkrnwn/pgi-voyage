@@ -1,8 +1,30 @@
 'use client';
 
-import { ArrowRight, Compass, Gift, Handshake, Ship, Star, Anchor, Users, CheckCircle2, ImageIcon, BookOpen, HeartHandshake, ShieldCheck, MapPin } from "lucide-react";
+import { useState, useEffect } from "react";
+import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { 
+  ArrowRight, 
+  Compass, 
+  Gift, 
+  Handshake, 
+  Ship, 
+  Star, 
+  Anchor, 
+  Users, 
+  CheckCircle2, 
+  ImageIcon, 
+  BookOpen, 
+  HeartHandshake, 
+  ShieldCheck, 
+  MapPin, 
+  Calendar, 
+  Clock, 
+  Loader2 
+} from "lucide-react";
 import { motion, Variants } from "framer-motion";
 
+// --- ANIMATION CONFIGURATIONS ---
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 40 },
   visible: { 
@@ -23,10 +45,144 @@ const staggerContainer: Variants = {
   }
 };
 
+// --- DEFAULT FALLBACK MEDIA & ASSETS ---
+const defaultGallery = [
+  { id: 'f-g1', src: "https://images.unsplash.com/photo-1717238977683-5f06a9e60694?q=80&w=870&auto=format&fit=crop", title: "Komodo Archipelago" },
+  { id: 'f-g2', src: "https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=1973&auto=format&fit=crop", title: "Padar Lookout" },
+  { id: 'f-g3', src: "https://images.unsplash.com/photo-1724127722795-96efb9caffbc?q=80&w=929&auto=format&fit=crop", title: "Pink Beach" },
+];
+
+const defaultBlogs = [
+  {
+    id: "f-b1",
+    slug: "guide-exploring-komodo",
+    category: "Travel Guide",
+    coverImage: "https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=1973&auto=format&fit=crop",
+    title: "The Ultimate Guide to Exploring Komodo in 2026",
+    excerpt: "Everything you need to know before setting sail. From encountering prehistoric dragons to hiking Padar Island.",
+    formattedDate: "June 10, 2026",
+    readTime: "5 min read"
+  },
+  {
+    id: "f-b2",
+    slug: "close-encounter-komodo-dragons",
+    category: "Wildlife",
+    coverImage: "https://images.unsplash.com/photo-1717238977683-5f06a9e60694?q=80&w=870&auto=format&fit=crop",
+    title: "A Close Encounter with the Komodo Dragons",
+    excerpt: "Discover the thrill of walking among the world's largest living lizards in their natural, protected habitat.",
+    formattedDate: "May 28, 2026",
+    readTime: "4 min read"
+  },
+  {
+    id: "f-b3",
+    slug: "why-liveaboard-is-best-way",
+    category: "Lifestyle",
+    coverImage: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=2070&auto=format&fit=crop",
+    title: "Why Liveaboard is the Best Way to Travel",
+    excerpt: "Forget traditional hotels. Waking up to a new island sunrise every day from your private cabin window is an unmatched luxury.",
+    formattedDate: "April 15, 2026",
+    readTime: "5 min read"
+  }
+];
+
+// Helper to strip HTML tags from content to make excerpts safely
+const stripHtml = (html: string) => {
+  if (typeof window === 'undefined') return html;
+  const tmp = document.createElement("DIV");
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || "";
+};
+
 export default function PublicHomepage() {
   const waNumber = "6287817865690";
-  const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20PGI%20Voyage,%20I%20want%20to%20sign%20up%20and%20claim%20my%20IDR%20500k%20Welcome%20Voucher!`;
-  const b2bWaLink = `https://wa.me/${waNumber}?text=Hello%20PGI%20Voyage,%20I%20am%20a%20Travel%20Agent%20interested%20in%20joining%20the%20B2B%20Portal%20for%20the%20Allotment%20&%20Commission%20system.`;
+  const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20PMM%20Voyage,%20I%20want%20to%20sign%20up%20and%20claim%20my%20IDR%20500k%20Welcome%20Voucher!`;
+  const b2bWaLink = `https://wa.me/${waNumber}?text=Hello%20PMM%20Voyage,%20I%20am%20a%20Travel%20Agent%20interested%20in%20joining%20the%20B2B%20Portal%20for%20the%20Allotment%20&%20Commission%20system.`;
+
+  // Dynamic States
+  const [blogs, setBlogs] = useState<any[]>([]);
+  const [gallery, setGallery] = useState<any[]>([]);
+  const [isLoadingBlogs, setIsLoadingBlogs] = useState(true);
+  const [isLoadingGallery, setIsLoadingGallery] = useState(true);
+
+  // Fetch published blogs (Limit 3)
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const blogsRef = collection(db, 'blogs');
+        const q = query(blogsRef, where('status', '==', 'Published'), orderBy('createdAt', 'desc'), limit(3));
+        const querySnapshot = await getDocs(q);
+        const fetchedBlogs: any[] = [];
+        
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const dateObj = data.createdAt?.toDate();
+          const formattedDate = dateObj ? new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric' }).format(dateObj) : 'Recently';
+          const plainText = stripHtml(data.content || "");
+          const excerpt = plainText.length > 120 ? plainText.substring(0, 120) + "..." : plainText;
+
+          fetchedBlogs.push({
+            id: doc.id,
+            ...data,
+            formattedDate,
+            excerpt,
+            readTime: data.readTime || "5 min read"
+          });
+        });
+
+        // Defensive merging: gabungkan data hasil fetch database dengan default fallback agar slot grid selalu penuh (3 buah)
+        const mergedBlogs = [...defaultBlogs];
+        fetchedBlogs.forEach((item, index) => {
+          if (index < 3) {
+            mergedBlogs[index] = item;
+          }
+        });
+
+        setBlogs(mergedBlogs);
+      } catch (err) {
+        console.error("Error fetching homepage blogs:", err);
+        setBlogs(defaultBlogs);
+      } finally {
+        setIsLoadingBlogs(false);
+      }
+    };
+    fetchBlogs();
+  }, []);
+
+  // Fetch recent gallery assets (Limit 3 images)
+  useEffect(() => {
+    const fetchGallery = async () => {
+      try {
+        const q = query(collection(db, 'galleries'), where('type', '==', 'image'), orderBy('createdAt', 'desc'), limit(3));
+        const querySnapshot = await getDocs(q);
+        const fetchedGallery: any[] = [];
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          fetchedGallery.push({
+            id: doc.id,
+            src: data.src,
+            title: data.title
+          });
+        });
+
+        // Defensive merging untuk galeri: timpa fallback dengan data asli Firebase jika tersedia
+        const mergedGallery = [...defaultGallery];
+        fetchedGallery.forEach((item, index) => {
+          if (index < 3) {
+            mergedGallery[index] = item;
+          }
+        });
+
+        setGallery(mergedGallery);
+      } catch (err) {
+        console.error("Error fetching homepage gallery:", err);
+        setGallery(defaultGallery);
+      } finally {
+        setIsLoadingGallery(false);
+      }
+    };
+    fetchGallery();
+  }, []);
 
   return (
     <main className="flex flex-col w-full bg-white overflow-x-hidden">
@@ -64,6 +220,7 @@ export default function PublicHomepage() {
           
           <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-5">
             <a 
+              id="btn-wa-hero-voucher"
               href={b2cWaLink}
               target="_blank"
               rel="noopener noreferrer"
@@ -91,7 +248,7 @@ export default function PublicHomepage() {
         </motion.div>
       </section>
 
-      {/* 2. WELCOME & STATS SECTION (NEW) */}
+      {/* 2. WELCOME & STATS SECTION */}
       <section className="py-24 px-6 lg:px-12 bg-white relative z-20">
         <div className="max-w-7xl mx-auto">
           <motion.div 
@@ -105,7 +262,7 @@ export default function PublicHomepage() {
               <h2 className="text-3xl md:text-5xl font-bold text-[#11223a] mb-6 leading-tight">Sail to the Wonders of the Archipelago</h2>
               <div className="w-20 h-1 bg-[#B88E52] mb-8 rounded-full"></div>
               <p className="text-gray-600 text-lg leading-relaxed mb-6">
-                PGI Voyage is a premier travel platform offering extraordinary sailing expeditions to Komodo, departing from Lombok. We provide unforgettable sea adventures with meticulously curated routes to Komodo Island, Pink Beach, Padar Island, Manta Point, and other stunning destinations.
+                <strong>PMM Voyage (Pulau Mas Mulia)</strong> is a premier travel platform offering extraordinary sailing expeditions to Komodo, departing from Lombok. We provide unforgettable sea adventures with meticulously curated routes to Komodo Island, Pink Beach, Padar Island, Manta Point, and other stunning destinations.
               </p>
               <p className="text-gray-600 text-lg leading-relaxed">
                 Enjoy a comfortable and secure journey aboard our selected vessels, accompanied by breathtaking ocean views and professional hospitality for a truly memorable holiday experience.
@@ -142,7 +299,7 @@ export default function PublicHomepage() {
           >
             <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-gray-200 border border-gray-100 group cursor-pointer aspect-[4/5] md:aspect-square lg:aspect-[4/5]">
               <img src="/images/Kapal_Pulau_Mas_88.png" alt="KM Pulau Mas 88" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/90 via-transparent to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/90 via-[#11223a]/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="absolute bottom-8 left-8 right-8 text-white">
                  <div className="inline-block bg-[#B88E52] text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg uppercase tracking-wider mb-3">
                   Flagship Vessel
@@ -162,7 +319,7 @@ export default function PublicHomepage() {
             <motion.span variants={fadeInUp} className="text-[#B88E52] font-semibold tracking-wider uppercase text-sm mb-3 block">Trust & Comfort</motion.span>
             <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-bold text-[#11223a] mb-6 leading-tight">Built for the <br/> Ultimate Voyage</motion.h2>
             <motion.p variants={fadeInUp} className="text-gray-600 text-lg mb-10 leading-relaxed font-light">
-              As a direct operator, we guarantee the highest standards of safety and hospitality. Our vessel is meticulously designed to provide a spacious, luxurious retreat with strict compliance to national maritime regulations.
+              As a direct operator of Pulau Mas Mulia, we guarantee the highest standards of safety and hospitality. Our vessel is meticulously designed to provide a spacious, luxurious retreat with strict compliance to national maritime regulations.
             </motion.p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-12">
@@ -271,7 +428,7 @@ export default function PublicHomepage() {
         </div>
       </section>
 
-      {/* 5. WHY CHOOSE US (NEW) */}
+      {/* 5. WHY CHOOSE US */}
       <section className="py-24 px-6 lg:px-12 bg-[#11223a] text-white">
         <div className="max-w-7xl mx-auto">
           <motion.div 
@@ -281,10 +438,10 @@ export default function PublicHomepage() {
             variants={staggerContainer}
             className="text-center mb-16"
           >
-            <motion.span variants={fadeInUp} className="text-[#B88E52] font-semibold tracking-wider uppercase text-sm mb-3 block">The PGI Difference</motion.span>
-            <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-bold mb-6">Why Choose PGI Voyage?</motion.h2>
+            <motion.span variants={fadeInUp} className="text-[#B88E52] font-semibold tracking-wider uppercase text-sm mb-3 block">The PMM Difference</motion.span>
+            <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-bold mb-6">Why Choose PMM Voyage?</motion.h2>
             <motion.p variants={fadeInUp} className="text-gray-300 max-w-2xl mx-auto text-lg leading-relaxed">
-              Experience a safe, comfortable, and unforgettable journey with carefully selected vessels, professional crews, and the best routes to Komodo’s most stunning destinations.
+              Experience a safe, comfortable, and unforgettable journey under Pulau Mas Mulia’s fleet with professional crews and the best routes to Komodo's most stunning destinations.
             </motion.p>
           </motion.div>
 
@@ -344,40 +501,71 @@ export default function PublicHomepage() {
             </motion.a>
           </motion.div>
 
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeInUp}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 h-[400px] md:h-[500px]"
-          >
-            {/* Gallery Item 1 */}
-            <div className="col-span-2 row-span-2 rounded-[2rem] overflow-hidden shadow-lg group relative cursor-pointer">
-              <img src="https://images.unsplash.com/photo-1717238977683-5f06a9e60694?q=80&w=870&auto=format&fit=crop" alt="Komodo" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-500"></div>
+          {isLoadingGallery ? (
+            <div className="flex flex-col items-center justify-center h-[400px] bg-white rounded-[2rem] border border-gray-100 shadow-sm">
+              <Loader2 className="w-10 h-10 text-[#B88E52] animate-spin mb-4" />
+              <p className="text-gray-500 font-medium">Loading Visual Masterpieces...</p>
             </div>
-            {/* Gallery Item 2 */}
-            <div className="col-span-1 row-span-1 rounded-[2rem] overflow-hidden shadow-lg group relative cursor-pointer">
-              <img src="https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=1973&auto=format&fit=crop" alt="Padar" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-500"></div>
-            </div>
-            {/* Gallery Item 3 */}
-            <div className="col-span-1 row-span-2 rounded-[2rem] overflow-hidden shadow-lg group relative cursor-pointer">
-               <img src="https://images.unsplash.com/photo-1724127722795-96efb9caffbc?q=80&w=929&auto=format&fit=crop" alt="Pink Beach" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-500"></div>
-            </div>
-            {/* Gallery CTA */}
-            <div className="col-span-1 row-span-1 rounded-[2rem] overflow-hidden shadow-lg group relative cursor-pointer bg-[#11223a] flex flex-col items-center justify-center text-center p-6 border border-gray-100 transition-transform hover:-translate-y-1">
-               <a href="/gallery" className="text-white hover:text-[#B88E52] transition-colors w-full h-full flex flex-col items-center justify-center">
-                  <span className="block text-4xl font-bold mb-2">50+</span>
-                  <span className="text-xs text-gray-300 uppercase tracking-wider font-semibold">More Photos</span>
-               </a>
-            </div>
-          </motion.div>
+          ) : (
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeInUp}
+              className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 h-[400px] md:h-[500px]"
+            >
+              {/* Gallery Item 1 */}
+              <a href="/gallery" className="col-span-2 row-span-2 rounded-[2rem] overflow-hidden shadow-lg group relative cursor-pointer block bg-gray-100">
+                <img 
+                  src={gallery[0]?.src || "https://images.unsplash.com/photo-1717238977683-5f06a9e60694?q=80&w=870"} 
+                  alt={gallery[0]?.title || "Komodo"} 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                />
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-500"></div>
+                <div className="absolute bottom-6 left-6 text-white font-bold text-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                  {gallery[0]?.title || "Explore"}
+                </div>
+              </a>
+              
+              {/* Gallery Item 2 */}
+              <a href="/gallery" className="col-span-1 row-span-1 rounded-[2rem] overflow-hidden shadow-lg group relative cursor-pointer block bg-gray-100">
+                <img 
+                  src={gallery[1]?.src || "https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=600"} 
+                  alt={gallery[1]?.title || "Padar"} 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                />
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-500"></div>
+                <div className="absolute bottom-4 left-4 text-white font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                  {gallery[1]?.title || "Explore"}
+                </div>
+              </a>
+              
+              {/* Gallery Item 3 */}
+              <a href="/gallery" className="col-span-1 row-span-2 rounded-[2rem] overflow-hidden shadow-lg group relative cursor-pointer block bg-gray-100">
+                 <img 
+                   src={gallery[2]?.src || "https://images.unsplash.com/photo-1724127722795-96efb9caffbc?q=80&w=600"} 
+                   alt={gallery[2]?.title || "Pink Beach"} 
+                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                 />
+                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-500"></div>
+                 <div className="absolute bottom-4 left-4 text-white font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                   {gallery[2]?.title || "Explore"}
+                 </div>
+              </a>
+              
+              {/* Gallery CTA */}
+              <div className="col-span-1 row-span-1 rounded-[2rem] overflow-hidden shadow-lg group relative cursor-pointer bg-[#11223a] flex flex-col items-center justify-center text-center p-6 border border-gray-100 transition-transform hover:-translate-y-1">
+                 <a href="/gallery" className="text-white hover:text-[#B88E52] transition-colors w-full h-full flex flex-col items-center justify-center">
+                    <span className="block text-4xl font-bold mb-2">50+</span>
+                    <span className="text-xs text-gray-300 uppercase tracking-wider font-semibold">More Photos</span>
+                 </a>
+              </div>
+            </motion.div>
+          )}
         </div>
       </section>
 
-      {/* 7. BLOG TEASER SECTION (REVISED to 3 CARDS) */}
+      {/* 7. BLOG TEASER SECTION */}
       <section className="py-24 px-6 lg:px-12 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto">
           <motion.div 
@@ -393,52 +581,55 @@ export default function PublicHomepage() {
             <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-bold text-[#11223a] mb-8">Stories from the Sea</motion.h2>
           </motion.div>
 
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12"
-          >
-            {/* Blog Post 1 */}
-            <motion.a href="/blog" variants={fadeInUp} className="group bg-[#f8f9fa] rounded-[2rem] overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col">
-              <div className="h-60 overflow-hidden relative">
-                <img src="https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=1973&auto=format&fit=crop" alt="Blog Post" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-sm text-[#11223a] text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full shadow-sm">Travel Guide</div>
-              </div>
-              <div className="p-8 flex-grow flex flex-col">
-                <h3 className="text-xl font-bold text-[#11223a] mb-4 group-hover:text-[#B88E52] transition-colors line-clamp-2">The Ultimate Guide to Exploring Komodo in 2026</h3>
-                <p className="text-gray-600 mb-8 line-clamp-2 leading-relaxed flex-grow text-sm">Everything you need to know before setting sail. From encountering prehistoric dragons to hiking Padar Island.</p>
-                <span className="text-[#B88E52] font-bold text-sm flex items-center gap-2 mt-auto uppercase tracking-wider">Read Article <ArrowRight className="w-4 h-4" /></span>
-              </div>
-            </motion.a>
-
-            {/* Blog Post 2 */}
-            <motion.a href="/blog" variants={fadeInUp} className="group bg-[#f8f9fa] rounded-[2rem] overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col">
-              <div className="h-60 overflow-hidden relative">
-                <img src="https://images.unsplash.com/photo-1717238977683-5f06a9e60694?q=80&w=870&auto=format&fit=crop" alt="Blog Post" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-sm text-[#11223a] text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full shadow-sm">Wildlife</div>
-              </div>
-              <div className="p-8 flex-grow flex flex-col">
-                <h3 className="text-xl font-bold text-[#11223a] mb-4 group-hover:text-[#B88E52] transition-colors line-clamp-2">A Close Encounter with the Komodo Dragons</h3>
-                <p className="text-gray-600 mb-8 line-clamp-2 leading-relaxed flex-grow text-sm">Discover the thrill of walking among the world's largest living lizards in their natural, protected habitat.</p>
-                <span className="text-[#B88E52] font-bold text-sm flex items-center gap-2 mt-auto uppercase tracking-wider">Read Article <ArrowRight className="w-4 h-4" /></span>
-              </div>
-            </motion.a>
-
-            {/* Blog Post 3 (NEW) */}
-            <motion.a href="/blog" variants={fadeInUp} className="group bg-[#f8f9fa] rounded-[2rem] overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col">
-              <div className="h-60 overflow-hidden relative">
-                <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=2070&auto=format&fit=crop" alt="Blog Post" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-sm text-[#11223a] text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full shadow-sm">Lifestyle</div>
-              </div>
-              <div className="p-8 flex-grow flex flex-col">
-                <h3 className="text-xl font-bold text-[#11223a] mb-4 group-hover:text-[#B88E52] transition-colors line-clamp-2">Why Liveaboard is the Best Way to Travel</h3>
-                <p className="text-gray-600 mb-8 line-clamp-2 leading-relaxed flex-grow text-sm">Forget traditional hotels. Waking up to a new island sunrise every day from your private cabin window is an unmatched luxury.</p>
-                <span className="text-[#B88E52] font-bold text-sm flex items-center gap-2 mt-auto uppercase tracking-wider">Read Article <ArrowRight className="w-4 h-4" /></span>
-              </div>
-            </motion.a>
-          </motion.div>
+          {isLoadingBlogs ? (
+            <div className="flex flex-col items-center justify-center h-[300px] bg-gray-50 rounded-[2.5rem] border border-gray-100 shadow-inner">
+              <Loader2 className="w-10 h-10 text-[#B88E52] animate-spin mb-4" />
+              <p className="text-gray-500 font-medium">Loading Editorial stories...</p>
+            </div>
+          ) : (
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={staggerContainer}
+              className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12"
+            >
+              {blogs.map((post) => (
+                <motion.a 
+                  href={`/blog/${post.slug}`} 
+                  key={post.id}
+                  variants={fadeInUp} 
+                  className="group bg-[#f8f9fa] rounded-[2rem] overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col"
+                >
+                  <div className="h-60 overflow-hidden relative bg-gray-200">
+                    <img 
+                      src={post.coverImage || "https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=600"} 
+                      alt={post.title} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                    />
+                    <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-sm text-[#11223a] text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full shadow-sm">
+                      {post.category || "Expedition"}
+                    </div>
+                  </div>
+                  <div className="p-8 flex-grow flex flex-col">
+                    <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-[#B88E52]"/> {post.formattedDate}</span>
+                      <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-[#B88E52]"/> {post.readTime}</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-[#11223a] mb-4 group-hover:text-[#B88E52] transition-colors line-clamp-2">
+                      {post.title}
+                    </h3>
+                    <p className="text-gray-600 mb-8 line-clamp-2 leading-relaxed flex-grow text-sm">
+                      {post.excerpt}
+                    </p>
+                    <span className="text-[#B88E52] font-bold text-sm flex items-center gap-2 mt-auto uppercase tracking-wider">
+                      Read Article <ArrowRight className="w-4 h-4" />
+                    </span>
+                  </div>
+                </motion.a>
+              ))}
+            </motion.div>
+          )}
 
           <div className="text-center">
              <a href="/blog" className="inline-flex items-center gap-2 text-[#11223a] font-bold hover:text-[#B88E52] transition-colors border-b-2 border-transparent hover:border-[#B88E52] pb-1">
@@ -466,7 +657,7 @@ export default function PublicHomepage() {
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12 relative z-10">
-          {/* Card B2C (Turis) */}
+          {/* Card B2C */}
           <motion.div 
             initial="hidden"
             whileInView="visible"
@@ -490,6 +681,7 @@ export default function PublicHomepage() {
               </ul>
             </div>
             <a 
+              id="btn-wa-explorer-voucher"
               href={b2cWaLink}
               target="_blank"
               rel="noopener noreferrer"
@@ -499,7 +691,7 @@ export default function PublicHomepage() {
             </a>
           </motion.div>
 
-          {/* Card B2B (Travel Agent) */}
+          {/* Card B2B */}
           <motion.div 
             initial="hidden"
             whileInView="visible"
@@ -526,6 +718,7 @@ export default function PublicHomepage() {
                 </ul>
               </div>
               <a 
+                id="btn-wa-b2b-register"
                 href={b2bWaLink}
                 target="_blank"
                 rel="noopener noreferrer"
