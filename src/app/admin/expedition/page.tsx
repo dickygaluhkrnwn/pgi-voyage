@@ -26,7 +26,8 @@ import {
   ListOrdered,
   MessageCircleQuestion,
   XCircle,
-  LayoutGrid
+  LayoutGrid,
+  CreditCard
 } from 'lucide-react';
 
 // --- STYLING CONSTANTS ---
@@ -58,7 +59,12 @@ const defaultExpeditionData = {
   ],
   inclusions: ["Meals onboard during the trip", "Snorkeling equipment"],
   exclusions: ["Flight tickets", "Personal Expenses"],
-  testimonials: [],
+  paymentMethods: [
+    { name: "Visa", logo: "https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" },
+    { name: "Mastercard", logo: "https://upload.wikimedia.org/wikipedia/commons/b/b7/MasterCard_Logo.svg" },
+    { name: "Bank Transfer", logo: "https://placehold.co/200x80/f8f9fa/11223a?text=Bank+Transfer&font=Montserrat" },
+    { name: "E-Wallet", logo: "https://placehold.co/200x80/f8f9fa/11223a?text=E-Wallets&font=Montserrat" }
+  ],
   faqs: [
     { q: "What should I bring?", a: "Valid ID, comfortable clothing, sunscreen..." }
   ]
@@ -122,7 +128,7 @@ const ImageUpload = ({ value, onChange, label }: { value: string, onChange: (url
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
         <div className="w-24 h-24 shrink-0 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-300 overflow-hidden flex items-center justify-center relative shadow-sm">
           {value ? (
-            <img src={value} alt="Preview" className="w-full h-full object-cover" />
+            <img src={value} alt="Preview" className="w-full h-full object-contain p-2" />
           ) : (
             <ImageIcon className="w-8 h-8 text-gray-300" />
           )}
@@ -162,10 +168,11 @@ export default function EditExpeditionPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<{type: 'success'|'error', msg: string} | null>(null);
   
-  const [activeTab, setActiveTab] = useState<'highlights' | 'itinerary' | 'cabins' | 'info'>('itinerary');
+  const [activeTab, setActiveTab] = useState<'highlights' | 'itinerary' | 'cabins' | 'payments' | 'info'>('itinerary');
   const [activeDayIdx, setActiveDayIdx] = useState(0);
   const [activeHighlightIdx, setActiveHighlightIdx] = useState(0);
   const [activeCabinIdx, setActiveCabinIdx] = useState(0);
+  const [activePaymentIdx, setActivePaymentIdx] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -177,6 +184,7 @@ export default function EditExpeditionPage() {
           if (!fetchedData.itinerary || fetchedData.itinerary.length === 0) fetchedData.itinerary = defaultExpeditionData.itinerary;
           if (!fetchedData.highlights || fetchedData.highlights.length === 0) fetchedData.highlights = defaultExpeditionData.highlights;
           if (!fetchedData.cabinPackages || fetchedData.cabinPackages.length === 0) fetchedData.cabinPackages = defaultExpeditionData.cabinPackages;
+          if (!fetchedData.paymentMethods || fetchedData.paymentMethods.length === 0) fetchedData.paymentMethods = defaultExpeditionData.paymentMethods;
           if (!fetchedData.faqs) fetchedData.faqs = defaultExpeditionData.faqs;
           
           setData({ ...defaultExpeditionData, ...fetchedData });
@@ -209,7 +217,7 @@ export default function EditExpeditionPage() {
   const handleAddHighlight = () => {
     const newHighlights = [
       ...data.highlights,
-      { title: "Destinasi Baru", desc: "Deskripsi singkat destinasi...", image: "", span: "col-span-1 row-span-1" }
+      { title: "Destinasi Baru", desc: "Deskripsi singkat destinasi...", image: "", span: "md:col-span-1 row-span-1" }
     ];
     setData({ ...data, highlights: newHighlights });
     setActiveHighlightIdx(newHighlights.length - 1);
@@ -244,6 +252,25 @@ export default function EditExpeditionPage() {
     }
   };
 
+  const handleAddPayment = () => {
+    const newPayments = [
+      ...data.paymentMethods,
+      { name: "Bank Baru", logo: "" }
+    ];
+    setData({ ...data, paymentMethods: newPayments });
+    setActivePaymentIdx(newPayments.length - 1);
+  };
+
+  const handleRemovePayment = () => {
+    if (data.paymentMethods.length <= 1) return alert('Minimal harus ada 1 metode pembayaran!');
+    if (confirm('Yakin ingin menghapus metode pembayaran ini?')) {
+      const newPayments = [...data.paymentMethods];
+      newPayments.splice(activePaymentIdx, 1);
+      setData({ ...data, paymentMethods: newPayments });
+      setActivePaymentIdx(0);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -257,6 +284,7 @@ export default function EditExpeditionPage() {
   const currentDayData = data.itinerary[activeDayIdx] || data.itinerary[0];
   const currentHighlight = data.highlights[activeHighlightIdx] || data.highlights[0];
   const currentCabin = data.cabinPackages[activeCabinIdx] || data.cabinPackages[0];
+  const currentPayment = data.paymentMethods[activePaymentIdx] || data.paymentMethods[0];
 
   return (
     <div className="max-w-[1500px] mx-auto space-y-6 pb-20">
@@ -293,6 +321,7 @@ export default function EditExpeditionPage() {
           { id: 'itinerary', icon: <Navigation className="w-4 h-4" />, label: 'The Itinerary' },
           { id: 'highlights', icon: <Map className="w-4 h-4" />, label: 'Highlights Grid' },
           { id: 'cabins', icon: <BedDouble className="w-4 h-4" />, label: 'Cabin Packages' },
+          { id: 'payments', icon: <CreditCard className="w-4 h-4" />, label: 'Payments' },
           { id: 'info', icon: <FileText className="w-4 h-4" />, label: 'Info & FAQs' }
         ].map(tab => (
           <button 
@@ -718,7 +747,7 @@ export default function EditExpeditionPage() {
               </div>
               
               {/* Scrollable Container for Preview */}
-              <div className="grid grid-cols-1 gap-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar pb-10">
+              <div className="grid grid-cols-1 2xl:grid-cols-2 gap-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar pb-10">
                 {data.cabinPackages.map((cabin: any, idx: number) => {
                   const safeCabinName = cabin.name || `Cabin-${idx + 1}`;
                   const isActive = idx === activeCabinIdx;
@@ -729,7 +758,7 @@ export default function EditExpeditionPage() {
                     className={`bg-white/5 border rounded-[2rem] overflow-hidden flex flex-col group transition-all duration-300 shadow-xl ${isActive ? 'border-[#B88E52] ring-2 ring-[#B88E52]/50 scale-[1.02]' : 'border-white/10 opacity-60 scale-95'}`}
                   >
                     <div className="h-56 overflow-hidden relative">
-                      <img src={cabin.image || "/images/Kapal_Pulau_Mas_88.png"} alt={safeCabinName} className="w-full h-full object-cover" />
+                      <img src={cabin.image || "/images/Kapal_Pulau_Mas_88.png"} alt={safeCabinName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#11223a] to-transparent opacity-60"></div>
                       {cabin.popular && (
                         <div className="absolute top-4 right-4 bg-[#B88E52] text-white text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg">Most Popular</div>
@@ -747,28 +776,114 @@ export default function EditExpeditionPage() {
                       <p className="text-gray-400 text-sm leading-relaxed mb-6 line-clamp-3">{cabin.desc || ""}</p>
                       
                       <ul className="space-y-3 mb-8 flex-grow">
-                        {(cabin.features || []).map((feat: string, i: number) => (
-                          <li key={i} className="flex items-start gap-3 text-sm text-gray-300">
-                            <CheckCircle2 className="w-4 h-4 text-[#B88E52] shrink-0 mt-0.5" /> 
-                            <span className="leading-snug">{feat}</span>
+                        {(cabin.features || []).slice(0,3).map((feat: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2 text-xs text-gray-300">
+                            <CheckCircle2 className="w-3 h-3 text-[#B88E52] shrink-0 mt-0.5" /> 
+                            <span className="leading-snug line-clamp-1">{feat}</span>
                           </li>
                         ))}
                       </ul>
-
-                      <div className="mt-auto pt-6 border-t border-white/10">
-                        <div className="flex items-baseline gap-1 mb-6">
-                          <span className="text-sm font-semibold text-[#B88E52]">IDR</span>
-                          <span className="text-4xl font-bold text-white tracking-tight">{cabin.price || "0K"}</span>
-                          <span className="text-gray-400 text-sm">/pax</span>
+                      <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-xs font-semibold text-[#B88E52]">IDR</span>
+                          <span className="text-xl font-bold text-white tracking-tight">{cabin.price || "0K"}</span>
+                          <span className="text-gray-400 text-[10px]">/pax</span>
                         </div>
-                        
-                        <div className={`flex items-center justify-center w-full py-4 rounded-xl font-bold transition-colors shadow-lg cursor-pointer ${isActive ? 'bg-[#B88E52] text-white' : 'bg-white text-[#11223a]'}`}>
-                          Select Package
-                        </div>
+                        <div className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${isActive ? 'bg-[#B88E52] text-white' : 'bg-white text-[#11223a]'}`}>Select</div>
                       </div>
                     </div>
                   </div>
                 )})}
+              </div>
+            </div>
+            
+          </div>
+        </motion.div>
+      )}
+
+      {/* --- CONTENT: PAYMENTS --- */}
+      {activeTab === 'payments' && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+          
+          {/* Payment Selector Navigation */}
+          <div className="flex items-center gap-3 overflow-x-auto pb-2">
+            {data.paymentMethods.map((method: any, idx: number) => (
+              <button
+                key={idx}
+                onClick={() => setActivePaymentIdx(idx)}
+                className={`shrink-0 px-6 py-3 rounded-full font-bold text-sm transition-all border ${
+                  activePaymentIdx === idx 
+                    ? 'bg-[#B88E52] border-[#B88E52] text-white shadow-lg shadow-[#B88E52]/30' 
+                    : 'bg-white border-gray-200 text-gray-500 hover:border-[#B88E52]/50 hover:text-[#11223a]'
+                }`}
+              >
+                {method.name || `Payment ${idx + 1}`}
+              </button>
+            ))}
+            <button 
+              onClick={handleAddPayment}
+              className="shrink-0 flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm bg-[#11223a]/5 text-[#11223a] border border-dashed border-[#11223a]/20 hover:bg-[#11223a]/10 transition-all"
+            >
+              <Plus className="w-4 h-4" /> Add Payment
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
+            
+            {/* LEFT: EDIT FORM */}
+            <div className="bg-white p-8 lg:p-10 rounded-[2.5rem] border border-gray-200 shadow-xl shadow-gray-200/40 space-y-8">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-6">
+                <h2 className="text-2xl font-bold text-[#11223a] flex items-center gap-3">
+                  <CreditCard className="w-6 h-6 text-[#B88E52]" /> Editor {currentPayment.name || `Payment ${activePaymentIdx + 1}`}
+                </h2>
+                <button 
+                  onClick={handleRemovePayment}
+                  className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                  title="Hapus Metode Pembayaran"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                <div>
+                  <label className={labelClass}>Nama Bank / Kartu Kredit</label>
+                  <input type="text" value={currentPayment.name} onChange={(e) => { const newPym = [...data.paymentMethods]; newPym[activePaymentIdx].name = e.target.value; setData({...data, paymentMethods: newPym}); }} className={inputClass} placeholder="Contoh: BCA / Visa" />
+                </div>
+                
+                <ImageUpload label="Upload Logo Pembayaran (Sebaiknya PNG Transparan)" value={currentPayment.logo} onChange={(url) => { const newPym = [...data.paymentMethods]; newPym[activePaymentIdx].logo = url; setData({...data, paymentMethods: newPym}); }} />
+              </div>
+            </div>
+
+            {/* RIGHT: LIVE PREVIEW PAYMENTS */}
+            <div className="bg-[#f8f9fa] p-8 lg:p-10 rounded-[2.5rem] border border-gray-200 shadow-inner sticky top-[160px]">
+              <div className="mb-8 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold text-emerald-500 tracking-widest uppercase mb-1 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Live Preview
+                  </h3>
+                  <p className="text-gray-500 text-sm">Tampilan Logo Pembayaran di halaman publik.</p>
+                </div>
+              </div>
+              
+              <div className="flex flex-wrap justify-center items-center gap-6 md:gap-10 p-8 bg-white rounded-3xl border border-gray-100 shadow-sm">
+                {data.paymentMethods.map((method: any, idx: number) => {
+                  const isActive = idx === activePaymentIdx;
+                  return (
+                    <div key={idx} className="flex flex-col items-center group cursor-pointer">
+                      <div className={`h-16 md:h-20 w-32 md:w-40 px-6 py-4 bg-white border shadow-sm rounded-2xl flex items-center justify-center transition-all duration-500 hover:-translate-y-1 ${isActive ? 'border-[#B88E52] ring-2 ring-[#B88E52]/20 grayscale-0 scale-105' : 'border-gray-200 grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}>
+                        <img 
+                          src={method.logo || "https://placehold.co/200x80/f8f9fa/11223a?text=Bank&font=Montserrat"} 
+                          alt={method.name} 
+                          className="max-h-full max-w-full object-contain" 
+                        />
+                      </div>
+                      <span className={`text-xs mt-4 font-semibold transition-opacity duration-300 tracking-wide ${isActive ? 'text-[#B88E52] opacity-100' : 'text-gray-500 opacity-0 group-hover:opacity-100'}`}>
+                        {method.name || 'Nama Bank'}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
             

@@ -26,7 +26,8 @@ import {
   ChevronLeft, 
   Navigation, 
   Map,
-  Loader2
+  Loader2,
+  CreditCard
 } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
@@ -182,13 +183,11 @@ const defaultExpeditionData = {
     "Personal Towel",
     "Personal Expenses / Tipping"
   ],
-  testimonials: [
-    { name: "Marco De Luca", origin: "Italy", image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop", text: "Snorkeling in Komodo was amazing. The water was clear, the marine life was beautiful, and PGI Voyage made the experience easy and memorable." },
-    { name: "Hannah Fischer", origin: "Switzerland", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop", text: "Seeing the Komodo dragons in their natural habitat was incredible. The crew was helpful, the guide was informative, and the whole journey felt very well planned." },
-    { name: "Lucas Bennett", origin: "United Kingdom", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop", text: "The trip was perfectly organized and full of beautiful moments. From the boat to the island stops, everything felt smooth, safe, and truly unforgettable." },
-    { name: "Sofia Andersen", origin: "Denmark", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop", text: "This was one of the best parts of our Indonesia trip. The boat was comfortable, the crew was helpful, and every island stop felt special and memorable." },
-    { name: "Daniel Miller", origin: "Germany", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop", text: "Everything was smooth from start to finish. PGI Voyage gave us a great sailing experience with beautiful destinations, good service, and amazing snorkeling spots." },
-    { name: "Emily Carter", origin: "Australia", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop", text: "Our Komodo sailing trip was absolutely unforgettable. The crew was friendly, the itinerary was well organized, and the view from Padar Island was beyond amazing." }
+  paymentMethods: [
+    { name: "Visa", logo: "https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" },
+    { name: "Mastercard", logo: "https://upload.wikimedia.org/wikipedia/commons/b/b7/MasterCard_Logo.svg" },
+    { name: "Bank Transfer", logo: "https://placehold.co/200x80/f8f9fa/11223a?text=Bank+Transfer&font=Montserrat" },
+    { name: "E-Wallet", logo: "https://placehold.co/200x80/f8f9fa/11223a?text=E-Wallets&font=Montserrat" }
   ],
   faqs: [
     { q: "What should I bring for my Komodo Island trip?", a: "Before joining your Komodo sailing adventure, we recommend preparing a few essentials to make your trip more comfortable and enjoyable. Please bring:\n\n• Valid ID or Passport: Required for registration, check-in, and security purposes.\n• Comfortable Travel Clothing: Light clothes, swimwear, a hat, sunglasses, and comfortable footwear for trekking and island activities.\n• Sun Protection: Sunscreen is highly recommended, as you will spend plenty of time outdoors under the tropical sun.\n• Personal Medication: Bring any personal medicine you may need, including motion sickness tablets if you are sensitive to boat movement.\n• Camera or Smartphone: Perfect for capturing beautiful moments, island views, Komodo dragons, whale sharks, and ocean scenery.\n• Basic Fitness Preparation: This trip includes activities such as trekking, snorkeling, swimming, and walking on islands, so guests should be in reasonably good physical condition." },
@@ -245,9 +244,8 @@ function FaqAccordion({ question, answer }: { question: string, answer: string }
 
 export default function ExpeditionPage() {
   const waNumber = "6287817865690";
-  const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20PGI%20Voyage,%20I%20want%20to%20book%20the%204D3N%20Expedition!`;
+  const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20PMM%20Voyage,%20I%20want%20to%20book%20the%204D3N%20Expedition!`;
   
-  const sliderRef = useRef<HTMLDivElement>(null);
   const [expData, setExpData] = useState(defaultExpeditionData);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -301,9 +299,9 @@ export default function ExpeditionPage() {
             ? data.exclusions.filter(Boolean) 
             : defaultExpeditionData.exclusions;
 
-          const mergedTestimonials = data.testimonials && Array.isArray(data.testimonials) && data.testimonials.length > 0 
-            ? data.testimonials 
-            : defaultExpeditionData.testimonials;
+          const mergedPaymentMethods = data.paymentMethods && Array.isArray(data.paymentMethods) && data.paymentMethods.length > 0 
+            ? data.paymentMethods 
+            : defaultExpeditionData.paymentMethods;
 
           const mergedFaqs = data.faqs && Array.isArray(data.faqs) && data.faqs.length > 0 
             ? data.faqs 
@@ -315,7 +313,7 @@ export default function ExpeditionPage() {
             cabinPackages: mergedCabinPackages,
             inclusions: mergedInclusions,
             exclusions: mergedExclusions,
-            testimonials: mergedTestimonials,
+            paymentMethods: mergedPaymentMethods,
             faqs: mergedFaqs,
           });
         } else {
@@ -333,20 +331,7 @@ export default function ExpeditionPage() {
   }, []);
 
   const getWaLink = (cabinName: string) => {
-    return `https://wa.me/${waNumber}?text=Hi%20PGI%20Voyage,%20I%20am%20interested%20in%20booking%20the%20*${encodeURIComponent(cabinName || "Cabin")}*%20for%20the%204D3N%20Expedition.`;
-  };
-
-  const slide = (direction: 'left' | 'right') => {
-    if (sliderRef.current) {
-      const { scrollLeft } = sliderRef.current;
-      const cardWidth = 360; // Card width + gap
-      const offset = direction === 'left' ? -cardWidth * 2 : cardWidth * 2;
-      
-      sliderRef.current.scrollTo({
-        left: scrollLeft + offset,
-        behavior: 'smooth'
-      });
-    }
+    return `https://wa.me/${waNumber}?text=Hi%20PMM%20Voyage,%20I%20am%20interested%20in%20booking%20the%20*${encodeURIComponent(cabinName || "Cabin")}*%20for%20the%204D3N%20Expedition.`;
   };
 
   if (isLoading) {
@@ -655,64 +640,40 @@ export default function ExpeditionPage() {
         </div>
       </section>
 
-      {/* 6. TESTIMONIALS SECTION */}
-      {expData.testimonials && expData.testimonials.length > 0 && (
-        <section className="py-24 px-6 lg:px-12 bg-[#f8f9fa] relative overflow-hidden">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-              <div>
-                <span className="text-[#B88E52] font-semibold tracking-wider uppercase text-sm mb-3 block">Social Proof</span>
-                <h2 className="text-3xl md:text-5xl font-bold text-[#11223a] mb-6">Real Stories from Our Travelers</h2>
-                <p className="text-gray-600 max-w-2xl text-lg">Read authentic experiences from travelers who joined our Komodo sailing trips and explored unforgettable liveaboard adventures.</p>
-              </div>
-              
-              <div className="flex gap-4 shrink-0">
-                <button 
-                  onClick={() => slide('left')}
-                  className="w-14 h-14 rounded-full border border-[#B88E52]/30 flex items-center justify-center text-[#B88E52] hover:bg-[#B88E52] hover:text-white transition-all focus:outline-none shadow-sm"
-                  aria-label="Previous testimonials"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                <button 
-                  onClick={() => slide('right')}
-                  className="w-14 h-14 rounded-full border border-[#B88E52]/30 flex items-center justify-center text-[#B88E52] hover:bg-[#B88E52] hover:text-white transition-all focus:outline-none shadow-sm"
-                  aria-label="Next testimonials"
-                >
-                  <ArrowRight className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-
-            <div 
-              ref={sliderRef}
-              className="flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-none pb-8"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      {/* 6. PAYMENT METHODS SECTION */}
+      {expData.paymentMethods && expData.paymentMethods.length > 0 && (
+        <section className="py-24 px-6 lg:px-12 bg-[#f8f9fa] border-b border-gray-100">
+          <div className="max-w-7xl mx-auto text-center">
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+              variants={staggerContainer}
             >
-              {expData.testimonials.map((testi, idx) => (
-                <div 
-                  key={idx} 
-                  className="min-w-[340px] md:min-w-[400px] max-w-[420px] bg-white p-10 rounded-[2.5rem] shadow-xl shadow-gray-200/40 border border-gray-100 relative overflow-hidden flex flex-col snap-start shrink-0 hover:-translate-y-2 transition-transform duration-300"
-                >
-                  <Quote className="absolute top-8 right-8 w-20 h-20 text-[#B88E52]/10 rotate-180 pointer-events-none" />
-                  <div className="flex gap-1 text-[#B88E52] mb-8 relative z-10">
-                    {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-current" />)}
-                  </div>
-                  
-                  <p className="text-gray-700 text-lg leading-relaxed mb-10 relative z-10 flex-grow italic font-light">
-                    "{testi.text}"
-                  </p>
-                  
-                  <div className="flex items-center gap-4 mt-auto relative z-10 pt-6 border-t border-gray-50">
-                    <img src={testi.image || "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200"} alt={testi.name || "Guest"} className="w-14 h-14 rounded-full object-cover shadow-md border-2 border-white" />
-                    <div>
-                      <h4 className="font-bold text-[#11223a]">{testi.name}</h4>
-                      <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">{testi.origin}</span>
+              <motion.span variants={fadeInUp} className="text-[#B88E52] font-semibold tracking-wider uppercase text-sm mb-3 block">
+                Secure Transactions
+              </motion.span>
+              <motion.h2 variants={fadeInUp} className="text-3xl md:text-5xl font-bold text-[#11223a] mb-12">
+                Trusted Global Partners
+              </motion.h2>
+              
+              <motion.div variants={fadeInUp} className="flex flex-wrap justify-center items-center gap-6 md:gap-10">
+                {expData.paymentMethods.map((method: any, idx: number) => (
+                  <div key={idx} className="flex flex-col items-center group cursor-pointer">
+                    <div className="h-16 md:h-20 w-32 md:w-40 px-6 py-4 bg-white border border-gray-200 shadow-sm rounded-2xl flex items-center justify-center transition-all duration-500 hover:shadow-md hover:border-[#B88E52]/40 hover:-translate-y-1">
+                      <img 
+                        src={method.logo || "https://placehold.co/200x80/f8f9fa/11223a?text=Bank&font=Montserrat"} 
+                        alt={method.name} 
+                        className="max-h-full max-w-full object-contain" 
+                      />
                     </div>
+                    <span className="text-xs text-gray-500 mt-4 font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0 tracking-wide">
+                      {method.name}
+                    </span>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </motion.div>
+            </motion.div>
           </div>
         </section>
       )}
