@@ -660,11 +660,11 @@ export default function ExpeditionPage() {
               <motion.div variants={fadeInUp} className="flex flex-wrap justify-center items-center gap-6 md:gap-10">
                 {expData.paymentMethods.map((method: any, idx: number) => (
                   <div key={idx} className="flex flex-col items-center group cursor-pointer">
-                    <div className="h-16 md:h-20 w-32 md:w-40 px-6 py-4 bg-white border border-gray-200 shadow-sm rounded-2xl flex items-center justify-center transition-all duration-500 hover:shadow-md hover:border-[#B88E52]/40 hover:-translate-y-1">
+                    <div className="h-16 md:h-20 w-32 md:w-44 px-3 py-2 bg-white border border-gray-200 shadow-sm rounded-xl flex items-center justify-center transition-all duration-500 hover:shadow-md hover:border-[#B88E52]/40 hover:-translate-y-1">
                       <img 
                         src={method.logo || "https://placehold.co/200x80/f8f9fa/11223a?text=Bank&font=Montserrat"} 
                         alt={method.name} 
-                        className="max-h-full max-w-full object-contain" 
+                        className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-500 drop-shadow-sm" 
                       />
                     </div>
                     <span className="text-xs text-gray-500 mt-4 font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0 tracking-wide">
