@@ -18,20 +18,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://pgivoyage.vercel.app"),
-  title: "PGI Voyage | Premium Liveaboard",
+  metadataBase: new URL("https://peacefulgoldenisland.com"), // <-- Update Domain Asli
+  title: "PMM Voyage | Premium Liveaboard", // <-- Update Nama Brand
   description: "Experience the ultimate 4D3N liveaboard expedition from Lombok to Komodo. Book your premium cabin today.",
+  verification: {
+    google: "ev8WW01OD9DIwuithkdSFT40usPCdfpGdAHcjbyogio", // <-- KODE VERIFIKASI GOOGLE GSC
+  },
   openGraph: {
-    title: "PGI Voyage | Premium Komodo Liveaboard",
+    title: "PMM Voyage | Premium Komodo Liveaboard",
     description: "Experience the ultimate 4D3N liveaboard expedition from Lombok to Komodo. Book your premium cabin today.",
-    url: "https://pgivoyage.vercel.app",
-    siteName: "PGI Voyage",
+    url: "https://peacefulgoldenisland.com",
+    siteName: "PMM Voyage",
     images: [
       {
         url: "https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?q=80&w=2070&auto=format&fit=crop",
         width: 1200,
         height: 630,
-        alt: "PGI Voyage Premium Liveaboard",
+        alt: "PMM Voyage Premium Liveaboard",
       }
     ],
     locale: "en_US",
@@ -39,7 +42,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PGI Voyage | Premium Komodo Liveaboard",
+    title: "PMM Voyage | Premium Komodo Liveaboard",
     description: "Experience the ultimate 4D3N liveaboard expedition from Lombok to Komodo. Book your premium cabin today.",
     images: ["https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?q=80&w=2070&auto=format&fit=crop"],
   },
