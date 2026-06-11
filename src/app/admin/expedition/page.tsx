@@ -25,7 +25,8 @@ import {
   Coffee,
   ListOrdered,
   MessageCircleQuestion,
-  XCircle
+  XCircle,
+  LayoutGrid
 } from 'lucide-react';
 
 // --- STYLING CONSTANTS ---
@@ -163,6 +164,8 @@ export default function EditExpeditionPage() {
   
   const [activeTab, setActiveTab] = useState<'highlights' | 'itinerary' | 'cabins' | 'info'>('itinerary');
   const [activeDayIdx, setActiveDayIdx] = useState(0);
+  const [activeHighlightIdx, setActiveHighlightIdx] = useState(0);
+  const [activeCabinIdx, setActiveCabinIdx] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -171,9 +174,9 @@ export default function EditExpeditionPage() {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const fetchedData = docSnap.data();
-          if (!fetchedData.itinerary) fetchedData.itinerary = defaultExpeditionData.itinerary;
-          if (!fetchedData.highlights) fetchedData.highlights = defaultExpeditionData.highlights;
-          if (!fetchedData.cabinPackages) fetchedData.cabinPackages = defaultExpeditionData.cabinPackages;
+          if (!fetchedData.itinerary || fetchedData.itinerary.length === 0) fetchedData.itinerary = defaultExpeditionData.itinerary;
+          if (!fetchedData.highlights || fetchedData.highlights.length === 0) fetchedData.highlights = defaultExpeditionData.highlights;
+          if (!fetchedData.cabinPackages || fetchedData.cabinPackages.length === 0) fetchedData.cabinPackages = defaultExpeditionData.cabinPackages;
           if (!fetchedData.faqs) fetchedData.faqs = defaultExpeditionData.faqs;
           
           setData({ ...defaultExpeditionData, ...fetchedData });
@@ -203,19 +206,41 @@ export default function EditExpeditionPage() {
     }
   };
 
+  const handleAddHighlight = () => {
+    const newHighlights = [
+      ...data.highlights,
+      { title: "Destinasi Baru", desc: "Deskripsi singkat destinasi...", image: "", span: "col-span-1 row-span-1" }
+    ];
+    setData({ ...data, highlights: newHighlights });
+    setActiveHighlightIdx(newHighlights.length - 1);
+  };
+
+  const handleRemoveHighlight = () => {
+    if (data.highlights.length <= 1) return alert('Minimal harus ada 1 highlight card!');
+    if (confirm('Yakin ingin menghapus highlight ini?')) {
+      const newHighlights = [...data.highlights];
+      newHighlights.splice(activeHighlightIdx, 1);
+      setData({ ...data, highlights: newHighlights });
+      setActiveHighlightIdx(0);
+    }
+  };
+
   const handleAddCabin = () => {
     const newCabins = [
       ...data.cabinPackages,
       { name: "Nama Kabin Baru", desc: "", price: "0K", features: ["Fasilitas utama"], image: "", popular: false }
     ];
     setData({ ...data, cabinPackages: newCabins });
+    setActiveCabinIdx(newCabins.length - 1);
   };
 
-  const handleRemoveCabin = (idx: number) => {
+  const handleRemoveCabin = () => {
+    if (data.cabinPackages.length <= 1) return alert('Minimal harus ada 1 kabin!');
     if (confirm('Yakin ingin menghapus kabin ini?')) {
       const newCabins = [...data.cabinPackages];
-      newCabins.splice(idx, 1);
+      newCabins.splice(activeCabinIdx, 1);
       setData({ ...data, cabinPackages: newCabins });
+      setActiveCabinIdx(0);
     }
   };
 
@@ -228,7 +253,10 @@ export default function EditExpeditionPage() {
     );
   }
 
-  const currentDayData = data.itinerary[activeDayIdx];
+  // Safe data access
+  const currentDayData = data.itinerary[activeDayIdx] || data.itinerary[0];
+  const currentHighlight = data.highlights[activeHighlightIdx] || data.highlights[0];
+  const currentCabin = data.cabinPackages[activeCabinIdx] || data.cabinPackages[0];
 
   return (
     <div className="max-w-[1500px] mx-auto space-y-6 pb-20">
@@ -507,30 +535,59 @@ export default function EditExpeditionPage() {
       {/* --- CONTENT: HIGHLIGHTS --- */}
       {activeTab === 'highlights' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+          
+          {/* Highlight Selector Navigation */}
+          <div className="flex items-center gap-3 overflow-x-auto pb-2">
+            {data.highlights.map((hl: any, idx: number) => (
+              <button
+                key={idx}
+                onClick={() => setActiveHighlightIdx(idx)}
+                className={`shrink-0 px-6 py-3 rounded-full font-bold text-sm transition-all border ${
+                  activeHighlightIdx === idx 
+                    ? 'bg-[#B88E52] border-[#B88E52] text-white shadow-lg shadow-[#B88E52]/30' 
+                    : 'bg-white border-gray-200 text-gray-500 hover:border-[#B88E52]/50 hover:text-[#11223a]'
+                }`}
+              >
+                Card {idx + 1}
+              </button>
+            ))}
+            <button 
+              onClick={handleAddHighlight}
+              className="shrink-0 flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm bg-[#11223a]/5 text-[#11223a] border border-dashed border-[#11223a]/20 hover:bg-[#11223a]/10 transition-all"
+            >
+              <Plus className="w-4 h-4" /> Add Highlight
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
             
             {/* LEFT: EDIT FORM */}
             <div className="bg-white p-8 lg:p-10 rounded-[2.5rem] border border-gray-200 shadow-xl shadow-gray-200/40 space-y-8">
-              <h2 className="text-2xl font-bold text-[#11223a] mb-6 border-b border-gray-100 pb-6 flex items-center gap-3">
-                <Map className="w-6 h-6 text-[#B88E52]" /> Editor Bento Grid Highlights
-              </h2>
-              <div className="grid grid-cols-1 gap-10">
-                {data.highlights.map((hl: any, idx: number) => (
-                  <div key={idx} className="bg-gray-50 p-6 rounded-3xl border border-gray-200 space-y-6 relative overflow-hidden group hover:border-[#B88E52]/30 transition-colors">
-                    <h3 className="font-bold text-[#B88E52] uppercase tracking-wider text-xs bg-[#B88E52]/10 inline-block px-4 py-1.5 rounded-full shadow-sm">Grid Card {idx + 1}</h3>
-                    <div>
-                      <label className={labelClass}>Judul Destinasi</label>
-                      <input type="text" value={hl.title} onChange={(e) => { const newHl = [...data.highlights]; newHl[idx].title = e.target.value; setData({...data, highlights: newHl}); }} className={inputClass} />
-                    </div>
-                    <div>
-                      <label className={labelClass}>Deskripsi Singkat</label>
-                      <textarea rows={2} value={hl.desc} onChange={(e) => { const newHl = [...data.highlights]; newHl[idx].desc = e.target.value; setData({...data, highlights: newHl}); }} className={`${inputClass} resize-none leading-relaxed`} />
-                    </div>
-                    <div className="pt-2">
-                      <ImageUpload label="Gambar Background" value={hl.image} onChange={(url) => { const newHl = [...data.highlights]; newHl[idx].image = url; setData({...data, highlights: newHl}); }} />
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center justify-between border-b border-gray-100 pb-6">
+                <h2 className="text-2xl font-bold text-[#11223a] flex items-center gap-3">
+                  <LayoutGrid className="w-6 h-6 text-[#B88E52]" /> Editor Card {activeHighlightIdx + 1}
+                </h2>
+                <button 
+                  onClick={handleRemoveHighlight}
+                  className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                  title="Hapus Highlight Card"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className={labelClass}>Judul Destinasi</label>
+                  <input type="text" value={currentHighlight.title} onChange={(e) => { const newHl = [...data.highlights]; newHl[activeHighlightIdx].title = e.target.value; setData({...data, highlights: newHl}); }} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>Deskripsi Singkat</label>
+                  <textarea rows={3} value={currentHighlight.desc} onChange={(e) => { const newHl = [...data.highlights]; newHl[activeHighlightIdx].desc = e.target.value; setData({...data, highlights: newHl}); }} className={`${inputClass} resize-none leading-relaxed`} />
+                </div>
+                <div className="pt-2">
+                  <ImageUpload label="Gambar Background" value={currentHighlight.image} onChange={(url) => { const newHl = [...data.highlights]; newHl[activeHighlightIdx].image = url; setData({...data, highlights: newHl}); }} />
+                </div>
               </div>
             </div>
 
@@ -545,17 +602,27 @@ export default function EditExpeditionPage() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-3 gap-3 h-[400px]">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[500px]">
                 {data.highlights.map((hl: any, idx: number) => {
-                  const gridSpan = hl.span || (idx === 0 ? "col-span-2 row-span-1" : idx === 1 ? "col-span-1 row-span-2" : "col-span-1 row-span-1");
+                  const gridSpan = hl.span || (idx === 0 ? "md:col-span-2 row-span-1" : idx === 1 ? "md:col-span-1 row-span-2" : "md:col-span-1 row-span-1");
+                  const isActive = idx === activeHighlightIdx;
+                  
                   return (
-                    <div key={idx} className={`relative rounded-2xl overflow-hidden shadow-md group ${gridSpan}`}>
-                      <img src={hl.image || "/images/Kapal_Pulau_Mas_88.png"} alt={hl.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div 
+                      key={idx} 
+                      className={`relative rounded-3xl overflow-hidden shadow-md group ${gridSpan} transition-all duration-300 ${isActive ? 'ring-4 ring-[#B88E52] shadow-[0_0_20px_rgba(184,142,82,0.4)] scale-[1.02] z-10' : 'opacity-80 scale-95'}`}
+                    >
+                      <img src={hl.image || "/images/Kapal_Pulau_Mas_88.png"} alt={hl.title} className="w-full h-full object-cover transition-transform duration-700" />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/90 via-[#11223a]/20 to-transparent opacity-80"></div>
-                      <div className="absolute bottom-4 left-4 right-4 text-white">
-                        <h3 className="text-sm md:text-lg font-bold mb-1 leading-tight">{hl.title || "Judul"}</h3>
-                        <p className="text-white/80 text-[10px] md:text-xs leading-snug line-clamp-2 hidden sm:block">{hl.desc}</p>
+                      <div className="absolute bottom-6 left-6 right-6 text-white">
+                        <h3 className="text-lg md:text-2xl font-bold mb-1 leading-tight">{hl.title || "Judul"}</h3>
+                        <p className="text-white/80 text-xs md:text-sm leading-snug line-clamp-2 hidden sm:block">{hl.desc}</p>
                       </div>
+                      {isActive && (
+                        <div className="absolute top-4 right-4 bg-[#B88E52] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
+                          Editing
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -569,55 +636,73 @@ export default function EditExpeditionPage() {
       {/* --- CONTENT: CABINS --- */}
       {activeTab === 'cabins' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+          
+          {/* Cabin Selector Navigation */}
+          <div className="flex items-center gap-3 overflow-x-auto pb-2">
+            {data.cabinPackages.map((cabin: any, idx: number) => (
+              <button
+                key={idx}
+                onClick={() => setActiveCabinIdx(idx)}
+                className={`shrink-0 px-6 py-3 rounded-full font-bold text-sm transition-all border ${
+                  activeCabinIdx === idx 
+                    ? 'bg-[#B88E52] border-[#B88E52] text-white shadow-lg shadow-[#B88E52]/30' 
+                    : 'bg-white border-gray-200 text-gray-500 hover:border-[#B88E52]/50 hover:text-[#11223a]'
+                }`}
+              >
+                {cabin.name || `Kabin ${idx + 1}`}
+              </button>
+            ))}
+            <button 
+              onClick={handleAddCabin}
+              className="shrink-0 flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm bg-[#11223a]/5 text-[#11223a] border border-dashed border-[#11223a]/20 hover:bg-[#11223a]/10 transition-all"
+            >
+              <Plus className="w-4 h-4" /> Add Cabin
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
             
             {/* LEFT: EDIT FORM */}
             <div className="bg-white p-8 lg:p-10 rounded-[2.5rem] border border-gray-200 shadow-xl shadow-gray-200/40 space-y-8">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-6">
                 <h2 className="text-2xl font-bold text-[#11223a] flex items-center gap-3">
-                  <BedDouble className="w-6 h-6 text-[#B88E52]" /> Paket Kabin
+                  <BedDouble className="w-6 h-6 text-[#B88E52]" /> Editor {currentCabin.name || `Kabin ${activeCabinIdx + 1}`}
                 </h2>
-                <button onClick={handleAddCabin} className="flex items-center gap-2 px-4 py-2.5 bg-[#11223a] text-white rounded-xl text-sm font-bold hover:bg-[#0f1f33] transition-all shadow-md">
-                  <Plus className="w-4 h-4" /> Tambah Kabin
+                <button 
+                  onClick={handleRemoveCabin}
+                  className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                  title="Hapus Kabin"
+                >
+                  <Trash2 className="w-5 h-5" />
                 </button>
               </div>
               
-              <div className="space-y-10">
-                {data.cabinPackages.map((cabin: any, idx: number) => (
-                  <div key={idx} className="bg-[#f8f9fa] p-8 rounded-[2rem] border border-gray-200 shadow-sm relative group">
-                    <button onClick={() => handleRemoveCabin(idx)} className="absolute -top-4 -right-4 bg-white text-red-500 p-3 rounded-full border border-gray-200 shadow-xl hover:bg-red-500 hover:text-white transition-all z-10 hidden group-hover:flex" title="Hapus Kabin">
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-[#B88E52] uppercase tracking-wider text-xs bg-white border border-[#B88E52]/20 px-4 py-1.5 rounded-full shadow-sm">Kabin {idx + 1}</h3>
-                        <label className="flex items-center gap-3 cursor-pointer group/toggle bg-white px-4 py-1.5 rounded-full border border-gray-200 shadow-sm">
-                          <span className="text-sm font-bold text-gray-600 group-hover/toggle:text-[#11223a] transition-colors">Most Popular Badge</span>
-                          <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${cabin.popular ? 'bg-[#B88E52]' : 'bg-gray-300'}`} onClick={() => { const newCb = [...data.cabinPackages]; newCb[idx].popular = !newCb[idx].popular; setData({...data, cabinPackages: newCb}); }}>
-                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${cabin.popular ? 'translate-x-6' : 'translate-x-1'}`} />
-                          </div>
-                        </label>
-                      </div>
-
-                      <div><label className={labelClass}>Nama Kabin</label><input type="text" value={cabin.name} onChange={(e) => { const newCb = [...data.cabinPackages]; newCb[idx].name = e.target.value; setData({...data, cabinPackages: newCb}); }} className={inputClass} /></div>
-                      <div><label className={labelClass}>Harga (Cth: 4,600K)</label><input type="text" value={cabin.price} onChange={(e) => { const newCb = [...data.cabinPackages]; newCb[idx].price = e.target.value; setData({...data, cabinPackages: newCb}); }} className={`${inputClass} font-mono`} /></div>
-                      <div><label className={labelClass}>Deskripsi Singkat</label><textarea rows={3} value={cabin.desc} onChange={(e) => { const newCb = [...data.cabinPackages]; newCb[idx].desc = e.target.value; setData({...data, cabinPackages: newCb}); }} className={`${inputClass} resize-none leading-relaxed`} /></div>
-                    
-                      <ImageUpload label="Foto Utama Kabin" value={cabin.image} onChange={(url) => { const newCb = [...data.cabinPackages]; newCb[idx].image = url; setData({...data, cabinPackages: newCb}); }} />
-                      <div>
-                        <label className={`${labelClass} flex justify-between items-center`}><span>Fasilitas Kabin</span> <span className="text-gray-400 font-normal text-xs bg-gray-100 px-2 py-1 rounded">(Pisahkan dgn Enter)</span></label>
-                        <textarea rows={4} value={(cabin.features || []).join('\n')} onChange={(e) => { const newCb = [...data.cabinPackages]; newCb[idx].features = e.target.value.split('\n'); setData({...data, cabinPackages: newCb}); }} className={`${inputClass} leading-relaxed`} placeholder="Sea view window&#10;AC Central&#10;Comfortable Bed" />
-                      </div>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <div>
+                    <span className="block text-sm font-bold text-[#11223a]">Highlight Badge</span>
+                    <span className="text-xs text-gray-500">Tampilkan badge "Most Popular"</span>
+                  </div>
+                  <label className="flex items-center cursor-pointer group/toggle">
+                    <div className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 ${currentCabin.popular ? 'bg-[#B88E52]' : 'bg-gray-300'}`} onClick={() => { const newCb = [...data.cabinPackages]; newCb[activeCabinIdx].popular = !newCb[activeCabinIdx].popular; setData({...data, cabinPackages: newCb}); }}>
+                      <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${currentCabin.popular ? 'translate-x-6' : 'translate-x-1'}`} />
                     </div>
-                  </div>
-                ))}
-                {data.cabinPackages.length === 0 && (
-                  <div className="text-center py-16 bg-gray-50 rounded-[2.5rem] border-2 border-dashed border-gray-300">
-                    <BedDouble className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 font-medium text-lg">Belum ada paket kabin.</p>
-                  </div>
-                )}
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div><label className={labelClass}>Nama Kabin</label><input type="text" value={currentCabin.name} onChange={(e) => { const newCb = [...data.cabinPackages]; newCb[activeCabinIdx].name = e.target.value; setData({...data, cabinPackages: newCb}); }} className={inputClass} /></div>
+                  <div><label className={labelClass}>Harga (Cth: 4,600K)</label><input type="text" value={currentCabin.price} onChange={(e) => { const newCb = [...data.cabinPackages]; newCb[activeCabinIdx].price = e.target.value; setData({...data, cabinPackages: newCb}); }} className={`${inputClass} font-mono`} /></div>
+                </div>
+                
+                <div><label className={labelClass}>Deskripsi Singkat</label><textarea rows={3} value={currentCabin.desc} onChange={(e) => { const newCb = [...data.cabinPackages]; newCb[activeCabinIdx].desc = e.target.value; setData({...data, cabinPackages: newCb}); }} className={`${inputClass} resize-none leading-relaxed`} /></div>
+              
+                <ImageUpload label="Foto Utama Kabin" value={currentCabin.image} onChange={(url) => { const newCb = [...data.cabinPackages]; newCb[activeCabinIdx].image = url; setData({...data, cabinPackages: newCb}); }} />
+                
+                <div>
+                  <label className={`${labelClass} flex justify-between items-center`}><span>Fasilitas Kabin</span> <span className="text-gray-400 font-normal text-xs bg-gray-100 px-2 py-1 rounded">(Pisahkan dgn Enter)</span></label>
+                  <textarea rows={5} value={(currentCabin.features || []).join('\n')} onChange={(e) => { const newCb = [...data.cabinPackages]; newCb[activeCabinIdx].features = e.target.value.split('\n'); setData({...data, cabinPackages: newCb}); }} className={`${inputClass} leading-relaxed`} placeholder="Sea view window&#10;AC Central&#10;Comfortable Bed" />
+                </div>
               </div>
             </div>
 
@@ -628,21 +713,31 @@ export default function EditExpeditionPage() {
                   <h3 className="text-xs font-bold text-emerald-400 tracking-widest uppercase mb-1 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live Preview
                   </h3>
-                  <p className="text-gray-400 text-sm">Tampilan Kabin di halaman publik.</p>
+                  <p className="text-gray-400 text-sm">Tampilan daftar Kabin di halaman publik.</p>
                 </div>
               </div>
               
               {/* Scrollable Container for Preview */}
-              <div className="grid grid-cols-1 2xl:grid-cols-2 gap-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar pb-10">
+              <div className="grid grid-cols-1 gap-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar pb-10">
                 {data.cabinPackages.map((cabin: any, idx: number) => {
                   const safeCabinName = cabin.name || `Cabin-${idx + 1}`;
+                  const isActive = idx === activeCabinIdx;
+
                   return (
-                  <div key={idx} className="bg-white/5 border border-white/10 rounded-[2rem] overflow-hidden flex flex-col group hover:bg-white/10 transition-colors duration-300 shadow-xl">
+                  <div 
+                    key={idx} 
+                    className={`bg-white/5 border rounded-[2rem] overflow-hidden flex flex-col group transition-all duration-300 shadow-xl ${isActive ? 'border-[#B88E52] ring-2 ring-[#B88E52]/50 scale-[1.02]' : 'border-white/10 opacity-60 scale-95'}`}
+                  >
                     <div className="h-56 overflow-hidden relative">
-                      <img src={cabin.image || "/images/Kapal_Pulau_Mas_88.png"} alt={safeCabinName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                      <img src={cabin.image || "/images/Kapal_Pulau_Mas_88.png"} alt={safeCabinName} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#11223a] to-transparent opacity-60"></div>
                       {cabin.popular && (
                         <div className="absolute top-4 right-4 bg-[#B88E52] text-white text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg">Most Popular</div>
+                      )}
+                      {isActive && (
+                        <div className="absolute top-4 left-4 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Editing
+                        </div>
                       )}
                       <div className="absolute bottom-4 left-4 text-white">
                          <h3 className="text-xl font-bold">{safeCabinName}</h3>
@@ -667,7 +762,7 @@ export default function EditExpeditionPage() {
                           <span className="text-gray-400 text-sm">/pax</span>
                         </div>
                         
-                        <div className="flex items-center justify-center w-full py-4 rounded-xl bg-white text-[#11223a] font-bold hover:bg-[#B88E52] hover:text-white transition-colors shadow-lg cursor-pointer">
+                        <div className={`flex items-center justify-center w-full py-4 rounded-xl font-bold transition-colors shadow-lg cursor-pointer ${isActive ? 'bg-[#B88E52] text-white' : 'bg-white text-[#11223a]'}`}>
                           Select Package
                         </div>
                       </div>
