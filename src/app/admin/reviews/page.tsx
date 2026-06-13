@@ -1,0 +1,534 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Star,
+  CheckCircle2,
+  XCircle,
+  Trash2,
+  Clock,
+  MapPin,
+  Search,
+  Loader2,
+  Image as ImageIcon,
+  MessageSquareQuote,
+  Filter,
+  Quote,
+  LayoutGrid,
+  LayoutList,
+  Eye,
+  X
+} from 'lucide-react';
+
+interface Review {
+  id: string;
+  name: string;
+  origin: string;
+  rating: number;
+  text: string;
+  image?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: any;
+}
+
+type FilterType = 'all' | 'pending' | 'approved' | 'rejected';
+
+export default function AdminReviewsPage() {
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState<FilterType>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  
+  // New UI/UX States
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list'); // Default to list for better management
+  const [selectedReview, setSelectedReview] = useState<Review | null>(null); // For modal preview
+
+  const fetchReviews = async () => {
+    setIsLoading(true);
+    try {
+      // Menggunakan limit(100) untuk mencegah crash jika ada ribuan data.
+      // Untuk scale lebih besar, bisa ditambahkan fitur pagination (startAfter).
+      const q = query(collection(db, 'reviews'), orderBy('createdAt', 'desc'), limit(100));
+      const querySnapshot = await getDocs(q);
+      const data: Review[] = [];
+      querySnapshot.forEach((doc) => {
+        data.push({ id: doc.id, ...doc.data() } as Review);
+      });
+      setReviews(data);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      alert("Gagal memuat data ulasan. Periksa koneksi atau rules Firestore.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
+
+  const handleUpdateStatus = async (id: string, newStatus: 'approved' | 'rejected' | 'pending') => {
+    setProcessingId(id);
+    try {
+      const reviewRef = doc(db, 'reviews', id);
+      await updateDoc(reviewRef, { status: newStatus });
+
+      // Update local state
+      setReviews(prev => prev.map(rev => rev.id === id ? { ...rev, status: newStatus } : rev));
+      
+      // Update modal state if open
+      if (selectedReview && selectedReview.id === id) {
+        setSelectedReview({ ...selectedReview, status: newStatus });
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      alert("Gagal memperbarui status.");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Yakin ingin menghapus ulasan ini secara permanen? Data yang dihapus tidak dapat dikembalikan.")) return;
+
+    setProcessingId(id);
+    try {
+      await deleteDoc(doc(db, 'reviews', id));
+      setReviews(prev => prev.filter(rev => rev.id !== id));
+      if (selectedReview?.id === id) setSelectedReview(null);
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      alert("Gagal menghapus ulasan.");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const filteredReviews = reviews.filter(rev => {
+    const matchesFilter = filter === 'all' || rev.status === filter;
+    const matchesSearch = rev.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      rev.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      rev.origin.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  const pendingCount = reviews.filter(r => r.status === 'pending').length;
+  const approvedCount = reviews.filter(r => r.status === 'approved').length;
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-[#B88E52]" />
+        <p className="text-gray-500 font-medium">Memuat dan mengoptimasi data ulasan...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 pb-12">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+        <div>
+          <h1 className="text-3xl font-bold text-[#11223a] flex items-center gap-3">
+            <MessageSquareQuote className="w-8 h-8 text-[#B88E52]" /> Guest Reviews
+          </h1>
+          <p className="text-gray-500 mt-2 font-medium">Moderasi ulasan tamu. Tampilan List disarankan untuk memproses banyak data.</p>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="bg-amber-50 border border-amber-200 px-6 py-3 rounded-2xl text-center">
+            <span className="block text-2xl font-bold text-amber-600">{pendingCount}</span>
+            <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">Menunggu</span>
+          </div>
+          <div className="bg-emerald-50 border border-emerald-200 px-6 py-3 rounded-2xl text-center">
+            <span className="block text-2xl font-bold text-emerald-600">{approvedCount}</span>
+            <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Disetujui</span>
+          </div>
+        </div>
+      </div>
+
+      {/* FILTER & SEARCH & VIEW TOGGLE */}
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm sticky top-[88px] z-30">
+        
+        <div className="flex items-center gap-2 overflow-x-auto w-full xl:w-auto hide-scrollbar">
+          <Filter className="w-5 h-5 text-gray-400 mr-2 shrink-0" />
+          {[
+            { id: 'all', label: 'Semua Ulasan' },
+            { id: 'pending', label: 'Pending' },
+            { id: 'approved', label: 'Approved' },
+            { id: 'rejected', label: 'Hidden / Rejected' }
+          ].map(tab => (
+            <button 
+              key={tab.id}
+              onClick={() => setFilter(tab.id as FilterType)} 
+              className={`shrink-0 px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
+                filter === tab.id 
+                  ? 'bg-[#11223a] text-white shadow-md' 
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-[#11223a]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-4 w-full xl:w-auto">
+          <div className="relative w-full xl:w-80 shrink-0">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input 
+              type="text" 
+              placeholder="Cari nama, negara, isi..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#B88E52] focus:ring-1 focus:ring-[#B88E52] transition-all text-sm font-medium"
+            />
+          </div>
+
+          <div className="flex bg-gray-100 p-1 rounded-xl shrink-0">
+            <button 
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-[#B88E52]' : 'text-gray-400 hover:text-[#11223a]'}`}
+              title="List View"
+            >
+              <LayoutList className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-[#B88E52]' : 'text-gray-400 hover:text-[#11223a]'}`}
+              title="Grid View"
+            >
+              <LayoutGrid className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      {/* REVIEWS RENDER AREA */}
+      {filteredReviews.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-gray-200">
+          <MessageSquareQuote className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-gray-700 mb-2">Tidak ada ulasan ditemukan</h3>
+          <p className="text-gray-500">Mungkin belum ada tamu yang mengirim ulasan untuk filter ini.</p>
+        </div>
+      ) : (
+        <AnimatePresence mode="popLayout">
+          {viewMode === 'list' ? (
+            /* --- LIST VIEW --- */
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="flex flex-col gap-3"
+            >
+              {filteredReviews.map((review) => {
+                const date = review.createdAt ? new Date(review.createdAt.seconds * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Baru saja';
+                const isProcessing = processingId === review.id;
+
+                return (
+                  <motion.div 
+                    key={review.id}
+                    layout
+                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+                    className={`flex flex-col lg:flex-row items-start lg:items-center gap-4 p-4 bg-white border rounded-2xl shadow-sm hover:shadow-md transition-all relative overflow-hidden ${
+                      review.status === 'pending' ? 'border-amber-200 hover:border-amber-400' :
+                      review.status === 'approved' ? 'border-emerald-200 hover:border-emerald-400' : 'border-gray-200'
+                    }`}
+                  >
+                    {isProcessing && (
+                      <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-20 flex items-center justify-center">
+                        <Loader2 className="w-6 h-6 animate-spin text-[#B88E52]" />
+                      </div>
+                    )}
+
+                    {/* Avatar / Thumbnail */}
+                    <div className="w-14 h-14 shrink-0 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center relative cursor-pointer" onClick={() => setSelectedReview(review)}>
+                      {review.image ? (
+                        <>
+                          <img src={review.image} alt={review.name} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                            <Eye className="w-5 h-5 text-white" />
+                          </div>
+                        </>
+                      ) : (
+                        <span className="text-xl font-bold text-gray-400">{review.name.charAt(0).toUpperCase()}</span>
+                      )}
+                    </div>
+
+                    {/* Core Info */}
+                    <div className="flex-1 min-w-0 pr-4">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <h4 className="font-bold text-[#11223a] truncate text-base">{review.name}</h4>
+                        <span className="text-xs font-semibold px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md truncate max-w-[120px]"><MapPin className="w-3 h-3 inline mr-1 -mt-0.5" />{review.origin}</span>
+                        <span className="text-xs text-gray-400 ml-auto flex items-center gap-1"><Clock className="w-3 h-3"/> {date}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex gap-0.5 shrink-0">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-[#B88E52] text-[#B88E52]' : 'fill-transparent text-gray-300'}`} />
+                          ))}
+                        </div>
+                        <p className="text-sm text-gray-600 line-clamp-1 italic">"{review.text}"</p>
+                      </div>
+                    </div>
+
+                    {/* Status & Actions */}
+                    <div className="flex items-center gap-3 shrink-0 w-full lg:w-auto pt-3 lg:pt-0 border-t lg:border-t-0 border-gray-100 justify-between lg:justify-end">
+                      <div className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                        review.status === 'pending' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                        review.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-50 text-gray-600 border border-gray-200'
+                      }`}>
+                        {review.status}
+                      </div>
+
+                      <div className="flex gap-1.5">
+                        <button 
+                          onClick={() => setSelectedReview(review)}
+                          className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white rounded-lg transition-colors border border-blue-100"
+                          title="Preview Detail"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+
+                        {review.status !== 'approved' && (
+                          <button 
+                            onClick={() => handleUpdateStatus(review.id, 'approved')}
+                            className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white rounded-lg transition-colors border border-emerald-100"
+                            title="Setujui"
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        
+                        {review.status === 'approved' && (
+                          <button 
+                            onClick={() => handleUpdateStatus(review.id, 'rejected')}
+                            className="p-2 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white rounded-lg transition-colors border border-amber-100"
+                            title="Sembunyikan"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </button>
+                        )}
+
+                        <button 
+                          onClick={() => handleDelete(review.id)}
+                          className="p-2 bg-red-50 text-red-600 hover:bg-red-500 hover:text-white rounded-lg transition-colors border border-red-100"
+                          title="Hapus"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          ) : (
+            /* --- GRID VIEW --- */
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+            >
+              {filteredReviews.map((review) => {
+                const date = review.createdAt ? new Date(review.createdAt.seconds * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Baru saja';
+                const isProcessing = processingId === review.id;
+
+                return (
+                  <motion.div 
+                    key={review.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+                    className={`bg-white rounded-[2rem] border overflow-hidden flex flex-col shadow-sm hover:shadow-lg transition-shadow relative ${
+                      review.status === 'pending' ? 'border-amber-200' :
+                      review.status === 'approved' ? 'border-emerald-200' : 'border-gray-200'
+                    }`}
+                  >
+                    {isProcessing && (
+                      <div className="absolute inset-0 bg-white/80 backdrop-blur-[1px] z-20 flex items-center justify-center">
+                        <Loader2 className="w-8 h-8 animate-spin text-[#B88E52]" />
+                      </div>
+                    )}
+
+                    {/* Status Badge */}
+                    <div className={`absolute top-5 right-5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 z-10 shadow-sm ${
+                      review.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                      review.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {review.status === 'pending' && <Clock className="w-3 h-3" />}
+                      {review.status === 'approved' && <CheckCircle2 className="w-3 h-3" />}
+                      {review.status === 'rejected' && <XCircle className="w-3 h-3" />}
+                      {review.status}
+                    </div>
+
+                    {/* Image Attachment */}
+                    {review.image ? (
+                      <div className="h-48 w-full bg-gray-100 relative group overflow-hidden cursor-pointer" onClick={() => setSelectedReview(review)}>
+                        <img src={review.image} alt="Review attachment" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                           <span className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl text-white text-sm font-bold flex items-center gap-2"><Eye className="w-4 h-4"/> Lihat Foto</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-2 w-full bg-gradient-to-r from-gray-100 to-gray-50"></div>
+                    )}
+
+                    <div className="p-6 flex flex-col flex-grow">
+                      {/* Header */}
+                      <div className="mb-4">
+                        <h3 className="text-xl font-bold text-[#11223a]">{review.name}</h3>
+                        <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 font-medium">
+                          <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-[#B88E52]" /> {review.origin}</span>
+                          <span>•</span>
+                          <span className="text-xs">{date}</span>
+                        </div>
+                        <div className="flex gap-1 mt-3">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'fill-[#B88E52] text-[#B88E52]' : 'fill-transparent text-gray-300'}`} />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Review Text */}
+                      <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex-grow mb-6 relative">
+                        <Quote className="absolute top-2 right-2 w-8 h-8 text-gray-200 rotate-180" />
+                        <p className="text-gray-700 text-sm leading-relaxed relative z-10 font-medium italic line-clamp-4 hover:line-clamp-none transition-all cursor-pointer" onClick={() => setSelectedReview(review)}>
+                          "{review.text}"
+                        </p>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
+                        {review.status !== 'approved' && (
+                          <button 
+                            onClick={() => handleUpdateStatus(review.id, 'approved')}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white border border-emerald-200 hover:border-emerald-500 rounded-xl text-sm font-bold transition-colors"
+                          >
+                            <CheckCircle2 className="w-4 h-4" /> Setujui
+                          </button>
+                        )}
+                        
+                        {review.status === 'approved' && (
+                          <button 
+                            onClick={() => handleUpdateStatus(review.id, 'rejected')}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-700 hover:bg-amber-500 hover:text-white border border-amber-200 hover:border-amber-500 rounded-xl text-sm font-bold transition-colors"
+                          >
+                            <XCircle className="w-4 h-4" /> Sembunyikan
+                          </button>
+                        )}
+
+                        <button 
+                          onClick={() => handleDelete(review.id)}
+                          className="px-4 py-2.5 bg-red-50 text-red-600 hover:bg-red-500 hover:text-white border border-red-200 hover:border-red-500 rounded-xl transition-colors"
+                          title="Hapus Permanen"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+
+      {/* REVIEW PREVIEW MODAL */}
+      <AnimatePresence>
+        {selectedReview && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-[#0b1728]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-6"
+              onClick={() => setSelectedReview(null)}
+            >
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="bg-white rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto hide-scrollbar shadow-2xl relative"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button 
+                  onClick={() => setSelectedReview(null)}
+                  className="absolute top-6 right-6 p-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition-colors z-20"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="flex flex-col lg:flex-row">
+                  {/* Modal Left: Image if exists */}
+                  {selectedReview.image && (
+                    <div className="w-full lg:w-2/5 min-h-[300px] lg:min-h-[500px] bg-gray-900 relative">
+                      <img src={selectedReview.image} alt="Guest moment" className="w-full h-full object-contain absolute inset-0" />
+                    </div>
+                  )}
+
+                  {/* Modal Right: Content */}
+                  <div className={`p-8 md:p-10 flex flex-col ${selectedReview.image ? 'w-full lg:w-3/5' : 'w-full'}`}>
+                    <div className={`inline-flex px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider items-center gap-1.5 w-max mb-6 ${
+                      selectedReview.status === 'pending' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                      selectedReview.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-50 text-gray-600 border border-gray-200'
+                    }`}>
+                      {selectedReview.status}
+                    </div>
+
+                    <h2 className="text-3xl font-bold text-[#11223a] mb-2">{selectedReview.name}</h2>
+                    <div className="flex items-center gap-4 text-gray-500 font-medium mb-6">
+                      <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-md"><MapPin className="w-4 h-4 text-[#B88E52]" /> {selectedReview.origin}</span>
+                      <span className="text-sm">{selectedReview.createdAt ? new Date(selectedReview.createdAt.seconds * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Baru saja'}</span>
+                    </div>
+
+                    <div className="flex gap-1.5 mb-8 p-4 bg-[#fdfaf5] border border-[#B88E52]/20 rounded-2xl w-max">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-6 h-6 ${i < selectedReview.rating ? 'fill-[#B88E52] text-[#B88E52]' : 'fill-transparent text-gray-300'}`} />
+                      ))}
+                    </div>
+
+                    <div className="relative mb-10 flex-grow">
+                      <Quote className="absolute -top-4 -left-4 w-12 h-12 text-gray-100 rotate-180" />
+                      <p className="text-gray-700 text-lg leading-relaxed relative z-10 italic">
+                        "{selectedReview.text}"
+                      </p>
+                    </div>
+
+                    {/* Modal Actions */}
+                    <div className="flex items-center gap-3 pt-6 border-t border-gray-100 mt-auto">
+                      {selectedReview.status !== 'approved' && (
+                        <button 
+                          onClick={() => handleUpdateStatus(selectedReview.id, 'approved')}
+                          className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-500 text-white hover:bg-emerald-600 rounded-xl font-bold transition-all shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-0.5"
+                        >
+                          <CheckCircle2 className="w-5 h-5" /> Setujui & Tampilkan
+                        </button>
+                      )}
+                      {selectedReview.status === 'approved' && (
+                        <button 
+                          onClick={() => handleUpdateStatus(selectedReview.id, 'rejected')}
+                          className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-amber-500 text-white hover:bg-amber-600 rounded-xl font-bold transition-all shadow-lg hover:shadow-amber-500/30 hover:-translate-y-0.5"
+                        >
+                          <XCircle className="w-5 h-5" /> Sembunyikan dari Publik
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => handleDelete(selectedReview.id)}
+                        className="px-6 py-3.5 bg-white text-red-500 hover:bg-red-50 border border-red-200 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Trash2 className="w-5 h-5" /> Hapus
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+    </div>
+  );
+}

@@ -16,15 +16,17 @@ import {
   Ship,
   ChevronLeft,
   ChevronRight,
-  Map
+  Map,
+  Star // Ikon baru untuk menu Reviews
 } from 'lucide-react';
 
-// Menu tersisa setelah B2C dan B2B dihapus
+// Menu tersisa setelah B2C dan B2B dihapus, ditambah Guest Reviews
 const sidebarLinks = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Blog & Journal', href: '/admin/blog', icon: BookOpen },
   { name: 'Gallery Assets', href: '/admin/gallery', icon: ImageIcon },
   { name: 'Expedition', href: '/admin/expedition', icon: Map },
+  { name: 'Guest Reviews', href: '/admin/reviews', icon: Star }, // Menu baru
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
@@ -73,7 +75,7 @@ export default function AdminSidebar({
               exit={{ opacity: 0, width: 0 }}
               className="flex flex-col whitespace-nowrap"
             >
-              <span className="text-white font-bold tracking-widest leading-none">PGI VOYAGE</span>
+              <span className="text-white font-bold tracking-widest leading-none">PMM VOYAGE</span>
               <span className="text-[#B88E52] text-[10px] font-mono uppercase tracking-widest mt-1 flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3" /> Command Center
               </span>

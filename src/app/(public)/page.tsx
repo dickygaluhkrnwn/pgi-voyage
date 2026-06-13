@@ -1,39 +1,41 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { 
-  ArrowRight, 
-  Compass, 
-  Gift, 
-  Handshake, 
-  Ship, 
-  Star, 
-  Anchor, 
-  Users, 
-  CheckCircle2, 
-  ImageIcon, 
-  BookOpen, 
-  HeartHandshake, 
-  ShieldCheck, 
-  MapPin, 
-  Calendar, 
-  Clock, 
-  Loader2 
+import {
+  ArrowRight,
+  Compass,
+  Gift,
+  Handshake,
+  Ship,
+  Star,
+  Anchor,
+  Users,
+  CheckCircle2,
+  ImageIcon,
+  BookOpen,
+  HeartHandshake,
+  ShieldCheck,
+  MapPin,
+  Calendar,
+  Clock,
+  Loader2,
+  Quote,
+  ChevronLeft
 } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 
 // --- ANIMATION CONFIGURATIONS ---
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 40 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    transition: { 
-      duration: 0.8, 
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.8,
       ease: [0.25, 0.1, 0.25, 1]
-    } 
+    }
   }
 };
 
@@ -85,6 +87,13 @@ const defaultBlogs = [
   }
 ];
 
+// Data Default Diubah menjadi Gambar Pemandangan/Momen
+const defaultReviews = [
+  { id: 'f-r1', name: 'Marco De Luca', origin: 'Italy', rating: 5, text: 'Snorkeling in Komodo was amazing. The water was clear, the marine life was beautiful, and PMM Voyage made the experience easy and memorable.', image: 'https://images.unsplash.com/photo-1682687220063-4742bd7fd538?q=80&w=800&auto=format&fit=crop' },
+  { id: 'f-r2', name: 'Hannah Fischer', origin: 'Switzerland', rating: 5, text: 'Seeing the Komodo dragons in their natural habitat was incredible. The crew was helpful, the guide was informative, and the whole journey felt very well planned.', image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=800&auto=format&fit=crop' },
+  { id: 'f-r3', name: 'Lucas Bennett', origin: 'United Kingdom', rating: 5, text: 'The trip was perfectly organized and full of beautiful moments. From the boat to the island stops, everything felt smooth, safe, and truly unforgettable.', image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=800&auto=format&fit=crop' }
+];
+
 // Helper to strip HTML tags from content to make excerpts safely
 const stripHtml = (html: string) => {
   if (typeof window === 'undefined') return html;
@@ -97,13 +106,58 @@ export default function PublicHomepage() {
   const waNumber = "6287817865690";
   const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20PMM%20Voyage,%20I%20want%20to%20sign%20up%20and%20claim%20my%20IDR%20500k%20Welcome%20Voucher!`;
   const b2bWaLink = `https://wa.me/${waNumber}?text=Hello%20PMM%20Voyage,%20I%20am%20a%20Travel%20Agent%20interested%20in%20joining%20the%20B2B%20Portal%20for%20the%20Allotment%20&%20Commission%20system.`;
-
+  
   // Dynamic States
+  const sliderRef = useRef<HTMLDivElement>(null);
   const [blogs, setBlogs] = useState<any[]>([]);
   const [gallery, setGallery] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [isLoadingBlogs, setIsLoadingBlogs] = useState(true);
   const [isLoadingGallery, setIsLoadingGallery] = useState(true);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
 
+  const slide = (direction: 'left' | 'right') => {
+    if (sliderRef.current) {
+      const { scrollLeft } = sliderRef.current;
+      const cardWidth = 360; // Card width + gap approximation
+      const offset = direction === 'left' ? -cardWidth * 2 : cardWidth * 2;
+
+      sliderRef.current.scrollTo({
+        left: scrollLeft + offset,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  /* STREAMING_CHUNK:Fetching Reviews Data... */
+  // Fetch Reviews (Limit 6 Approved)
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const q = query(collection(db, 'reviews'), where('status', '==', 'approved'), orderBy('createdAt', 'desc'), limit(6));
+        const querySnapshot = await getDocs(q);
+        const fetchedReviews: any[] = [];
+
+        querySnapshot.forEach((doc) => {
+          fetchedReviews.push({ id: doc.id, ...doc.data() });
+        });
+
+        if (fetchedReviews.length > 0) {
+          setReviews(fetchedReviews);
+        } else {
+          setReviews(defaultReviews);
+        }
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+        setReviews(defaultReviews);
+      } finally {
+        setIsLoadingReviews(false);
+      }
+    };
+    fetchReviews();
+  }, []);
+
+  /* STREAMING_CHUNK:Fetching Blogs Data... */
   // Fetch published blogs (Limit 3)
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -112,7 +166,7 @@ export default function PublicHomepage() {
         const q = query(blogsRef, where('status', '==', 'Published'), orderBy('createdAt', 'desc'), limit(3));
         const querySnapshot = await getDocs(q);
         const fetchedBlogs: any[] = [];
-        
+
         querySnapshot.forEach((doc) => {
           const data = doc.data();
           const dateObj = data.createdAt?.toDate();
@@ -129,7 +183,6 @@ export default function PublicHomepage() {
           });
         });
 
-        // Defensive merging: gabungkan data hasil fetch database dengan default fallback agar slot grid selalu penuh (3 buah)
         const mergedBlogs = [...defaultBlogs];
         fetchedBlogs.forEach((item, index) => {
           if (index < 3) {
@@ -148,6 +201,7 @@ export default function PublicHomepage() {
     fetchBlogs();
   }, []);
 
+  /* STREAMING_CHUNK:Fetching Gallery Data... */
   // Fetch recent gallery assets (Limit 3 images)
   useEffect(() => {
     const fetchGallery = async () => {
@@ -165,7 +219,6 @@ export default function PublicHomepage() {
           });
         });
 
-        // Defensive merging untuk galeri: timpa fallback dengan data asli Firebase jika tersedia
         const mergedGallery = [...defaultGallery];
         fetchedGallery.forEach((item, index) => {
           if (index < 3) {
@@ -184,9 +237,9 @@ export default function PublicHomepage() {
     fetchGallery();
   }, []);
 
+  /* STREAMING_CHUNK:Rendering Main Layout... */
   return (
-    <main className="flex flex-col w-full bg-white overflow-x-hidden">
-      
+    <main className="min-h-screen bg-white">
       {/* 1. HERO SECTION */}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-6 lg:px-12 bg-[#11223a] overflow-hidden flex flex-col items-center justify-center min-h-screen">
         <div 
@@ -565,7 +618,91 @@ export default function PublicHomepage() {
         </div>
       </section>
 
-      {/* 7. BLOG TEASER SECTION */}
+      {/* 7. REVIEWS & TESTIMONIALS SECTION */}
+      <section className="py-24 px-6 lg:px-12 bg-[#f8f9fa] border-b border-gray-100 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+            <div>
+              <span className="text-[#B88E52] font-semibold tracking-wider uppercase text-sm mb-3 block">Social Proof</span>
+              <h2 className="text-3xl md:text-5xl font-bold text-[#11223a] mb-6">Real Stories from Our Travelers</h2>
+              <p className="text-gray-600 max-w-2xl text-lg">Read authentic experiences from travelers who joined our Komodo sailing trips and explored unforgettable liveaboard adventures.</p>
+            </div>
+            
+            <div className="flex gap-4 shrink-0">
+              <button 
+                onClick={() => slide('left')}
+                className="w-14 h-14 rounded-full border border-[#B88E52]/30 flex items-center justify-center text-[#B88E52] hover:bg-[#B88E52] hover:text-white transition-all focus:outline-none shadow-sm"
+                aria-label="Previous testimonials"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button 
+                onClick={() => slide('right')}
+                className="w-14 h-14 rounded-full border border-[#B88E52]/30 flex items-center justify-center text-[#B88E52] hover:bg-[#B88E52] hover:text-white transition-all focus:outline-none shadow-sm"
+                aria-label="Next testimonials"
+              >
+                <ArrowRight className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+
+          {isLoadingReviews ? (
+            <div className="flex flex-col items-center justify-center h-[350px] bg-white rounded-[2.5rem] border border-gray-100 shadow-sm">
+              <Loader2 className="w-10 h-10 text-[#B88E52] animate-spin mb-4" />
+              <p className="text-gray-500 font-medium">Loading Traveler Stories...</p>
+            </div>
+          ) : (
+            <div 
+              ref={sliderRef}
+              className="flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-none pb-8 pt-4"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {reviews.map((testi, idx) => (
+                <div 
+                  key={testi.id || idx} 
+                  className="min-w-[340px] md:min-w-[400px] max-w-[420px] bg-white p-8 md:p-10 rounded-[2.5rem] shadow-xl shadow-gray-200/40 border border-gray-100 relative overflow-hidden flex flex-col snap-start shrink-0 hover:-translate-y-2 transition-transform duration-300"
+                >
+                  <Quote className="absolute top-8 right-8 w-20 h-20 text-[#B88E52]/10 rotate-180 pointer-events-none" />
+                  
+                  <div className="flex gap-1 text-[#B88E52] mb-6 relative z-10">
+                    {[...Array(5)].map((_, i) => <Star key={i} className={`w-5 h-5 ${i < (testi.rating || 5) ? 'fill-[#B88E52] text-[#B88E52]' : 'fill-transparent text-gray-300'}`} />)}
+                  </div>
+                  
+                  <p className="text-gray-700 text-lg leading-relaxed mb-6 relative z-10 flex-grow italic font-light">
+                    "{testi.text}"
+                  </p>
+
+                  {/* Moment Photo Section */}
+                  {testi.image && (
+                    <div className="w-full h-48 rounded-2xl overflow-hidden mb-6 relative z-10 shadow-sm border border-gray-100 shrink-0">
+                      <img src={testi.image} alt="Guest Moment" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                    </div>
+                  )}
+                  
+                  {/* Avatar & Info */}
+                  <div className="flex items-center gap-4 mt-auto relative z-10 pt-6 border-t border-gray-50">
+                    <div className="w-12 h-12 shrink-0 rounded-full bg-[#fdfaf5] border border-[#B88E52]/20 shadow-sm flex items-center justify-center text-xl font-bold text-[#B88E52]">
+                      {testi.name?.charAt(0).toUpperCase() || "G"}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-[#11223a]">{testi.name}</h4>
+                      <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">{testi.origin}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="text-center mt-12">
+             <a href="/review" className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-white border border-[#B88E52]/40 text-[#11223a] font-bold hover:bg-[#B88E52] hover:text-white transition-all shadow-sm hover:shadow-md">
+                Share Your Experience <ArrowRight className="w-4 h-4" />
+             </a>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. BLOG TEASER SECTION */}
       <section className="py-24 px-6 lg:px-12 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto">
           <motion.div 
@@ -639,7 +776,7 @@ export default function PublicHomepage() {
         </div>
       </section>
 
-      {/* 8. PORTAL / ECOSYSTEM SECTION (B2C & B2B) */}
+      {/* 9. PORTAL / ECOSYSTEM SECTION (B2C & B2B) */}
       <section id="ecosystem" className="py-24 px-6 lg:px-12 bg-[#f8f9fa] max-w-7xl mx-auto w-full relative">
         <motion.div 
           initial="hidden"
