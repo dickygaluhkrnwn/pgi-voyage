@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from "react";
-import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   ArrowRight,
@@ -22,9 +22,10 @@ import {
   Clock,
   Loader2,
   Quote,
-  ChevronLeft
+  ChevronLeft,
+  X
 } from "lucide-react";
-import { motion, Variants } from "framer-motion";
+import { motion, Variants, AnimatePresence } from "framer-motion";
 
 // --- ANIMATION CONFIGURATIONS ---
 const fadeInUp: Variants = {
@@ -87,11 +88,17 @@ const defaultBlogs = [
   }
 ];
 
-// Data Default Diubah menjadi Gambar Pemandangan/Momen
 const defaultReviews = [
   { id: 'f-r1', name: 'Marco De Luca', origin: 'Italy', rating: 5, text: 'Snorkeling in Komodo was amazing. The water was clear, the marine life was beautiful, and PMM Voyage made the experience easy and memorable.', image: 'https://images.unsplash.com/photo-1682687220063-4742bd7fd538?q=80&w=800&auto=format&fit=crop' },
-  { id: 'f-r2', name: 'Hannah Fischer', origin: 'Switzerland', rating: 5, text: 'Seeing the Komodo dragons in their natural habitat was incredible. The crew was helpful, the guide was informative, and the whole journey felt very well planned.', image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=800&auto=format&fit=crop' },
+  { id: 'f-r2', name: 'Hannah Fischer', origin: 'Switzerland', rating: 5, text: 'Seeing the Komodo dragons in their natural habitat was incredible. The crew was helpful, the guide was informative, and the whole journey felt very well planned. I would absolutely recommend this to anyone visiting Indonesia for the first time.', image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=800&auto=format&fit=crop' },
   { id: 'f-r3', name: 'Lucas Bennett', origin: 'United Kingdom', rating: 5, text: 'The trip was perfectly organized and full of beautiful moments. From the boat to the island stops, everything felt smooth, safe, and truly unforgettable.', image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=800&auto=format&fit=crop' }
+];
+
+const defaultItineraryFallback = [
+  { day: "DAY 1", title: "Departure & Secret Islands", image: "https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=1973&auto=format&fit=crop" },
+  { day: "DAY 2", title: "Whale Sharks & Tambora", image: "https://images.unsplash.com/photo-1580580297368-c782fb65d271?q=80&w=1974&auto=format&fit=crop" },
+  { day: "DAY 3", title: "Komodo & Padar Excursion", image: "https://images.unsplash.com/photo-1717238977683-5f06a9e60694?q=80&w=1970&auto=format&fit=crop" },
+  { day: "DAY 4", title: "Majarite, Kelor & Return", image: "https://images.unsplash.com/photo-1724127722795-96efb9caffbc?q=80&w=1929&auto=format&fit=crop" }
 ];
 
 // Helper to strip HTML tags from content to make excerpts safely
@@ -104,7 +111,7 @@ const stripHtml = (html: string) => {
 
 export default function PublicHomepage() {
   const waNumber = "6287817865690";
-  const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20PMM%20Voyage,%20I%20want%20to%20sign%20up%20and%20claim%20my%20IDR%20500k%20Welcome%20Voucher!`;
+  const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20PMM%20Voyage,%20I%20want%20to%20book%20the%204D3N%20Expedition!`;
   const b2bWaLink = `https://wa.me/${waNumber}?text=Hello%20PMM%20Voyage,%20I%20am%20a%20Travel%20Agent%20interested%20in%20joining%20the%20B2B%20Portal%20for%20the%20Allotment%20&%20Commission%20system.`;
   
   // Dynamic States
@@ -112,14 +119,20 @@ export default function PublicHomepage() {
   const [blogs, setBlogs] = useState<any[]>([]);
   const [gallery, setGallery] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [itinerary, setItinerary] = useState<any[]>([]);
+  
   const [isLoadingBlogs, setIsLoadingBlogs] = useState(true);
   const [isLoadingGallery, setIsLoadingGallery] = useState(true);
   const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+  const [isLoadingItinerary, setIsLoadingItinerary] = useState(true);
+
+  // Review Modal State
+  const [selectedReview, setSelectedReview] = useState<any | null>(null);
 
   const slide = (direction: 'left' | 'right') => {
     if (sliderRef.current) {
       const { scrollLeft } = sliderRef.current;
-      const cardWidth = 360; // Card width + gap approximation
+      const cardWidth = 360; 
       const offset = direction === 'left' ? -cardWidth * 2 : cardWidth * 2;
 
       sliderRef.current.scrollTo({
@@ -129,7 +142,27 @@ export default function PublicHomepage() {
     }
   };
 
-  /* STREAMING_CHUNK:Fetching Reviews Data... */
+  // Fetch Itinerary (Expedition Timeline)
+  useEffect(() => {
+    const fetchItinerary = async () => {
+      try {
+        const docRef = doc(db, 'settings', 'expedition');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().itinerary && docSnap.data().itinerary.length > 0) {
+          setItinerary(docSnap.data().itinerary.slice(0, 4));
+        } else {
+          setItinerary(defaultItineraryFallback);
+        }
+      } catch (error) {
+        console.error("Error fetching itinerary:", error);
+        setItinerary(defaultItineraryFallback);
+      } finally {
+        setIsLoadingItinerary(false);
+      }
+    };
+    fetchItinerary();
+  }, []);
+
   // Fetch Reviews (Limit 6 Approved)
   useEffect(() => {
     const fetchReviews = async () => {
@@ -157,7 +190,6 @@ export default function PublicHomepage() {
     fetchReviews();
   }, []);
 
-  /* STREAMING_CHUNK:Fetching Blogs Data... */
   // Fetch published blogs (Limit 3)
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -201,7 +233,6 @@ export default function PublicHomepage() {
     fetchBlogs();
   }, []);
 
-  /* STREAMING_CHUNK:Fetching Gallery Data... */
   // Fetch recent gallery assets (Limit 3 images)
   useEffect(() => {
     const fetchGallery = async () => {
@@ -237,9 +268,9 @@ export default function PublicHomepage() {
     fetchGallery();
   }, []);
 
-  /* STREAMING_CHUNK:Rendering Main Layout... */
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white relative">
+      
       {/* 1. HERO SECTION */}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-6 lg:px-12 bg-[#11223a] overflow-hidden flex flex-col items-center justify-center min-h-screen">
         <div 
@@ -273,13 +304,12 @@ export default function PublicHomepage() {
           
           <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-5">
             <a 
-              id="btn-wa-hero-voucher"
               href={b2cWaLink}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#B88E52] hover:bg-[#a37c46] text-white font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(184,142,82,0.4)] hover:shadow-[0_0_50px_rgba(184,142,82,0.6)] transform hover:scale-105"
             >
-              Claim IDR 500k Voucher <ArrowRight className="h-5 w-5" />
+              Book Your Voyage <ArrowRight className="h-5 w-5" />
             </a>
             <a 
               href="/expedition"
@@ -351,7 +381,7 @@ export default function PublicHomepage() {
             className="w-full lg:w-1/2 relative"
           >
             <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-gray-200 border border-gray-100 group cursor-pointer aspect-[4/5] md:aspect-square lg:aspect-[4/5]">
-              <img src="/images/Kapal_Pulau_Mas_88.png" alt="KM Pulau Mas 88" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <img src="https://res.cloudinary.com/danyx7uny/image/upload/v1781582217/obuwude82h22wr1wvscz.png" alt="KM Pulau Mas 88" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/90 via-[#11223a]/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="absolute bottom-8 left-8 right-8 text-white">
                  <div className="inline-block bg-[#B88E52] text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg uppercase tracking-wider mb-3">
@@ -408,7 +438,7 @@ export default function PublicHomepage() {
         </div>
       </section>
 
-      {/* 4. DESTINATIONS TEASER SECTION */}
+      {/* 4. DESTINATIONS TEASER SECTION (4 Days of Wonder) */}
       <section className="py-24 px-6 lg:px-12 bg-white relative">
         <div className="max-w-7xl mx-auto">
           <motion.div 
@@ -432,52 +462,38 @@ export default function PublicHomepage() {
             </motion.a>
           </motion.div>
 
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
-          >
-            {/* Card 1: Padar Island */}
-            <motion.a href="/expedition" variants={fadeInUp} className="group rounded-[2rem] overflow-hidden shadow-xl shadow-gray-200/60 border border-gray-100 block">
-              <div className="relative h-96 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?q=80&w=2073&auto=format&fit=crop" alt="Padar Island" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/90 via-[#11223a]/20 to-transparent"></div>
-                <div className="absolute bottom-8 left-8 right-8">
-                  <span className="text-[#B88E52] text-xs font-bold uppercase tracking-wider mb-2 block">Iconic Viewpoint</span>
-                  <h3 className="text-3xl font-bold text-white mb-2">Padar Island</h3>
-                  <p className="text-white/80 text-sm leading-relaxed">Hike to the summit for a breathtaking panoramic view of the three-colored bays.</p>
-                </div>
-              </div>
-            </motion.a>
-
-            {/* Card 2: Komodo Park */}
-            <motion.a href="/expedition" variants={fadeInUp} className="group rounded-[2rem] overflow-hidden shadow-xl shadow-gray-200/60 border border-gray-100 block">
-              <div className="relative h-96 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=2070&auto=format&fit=crop" alt="Komodo Dragon" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/90 via-[#11223a]/20 to-transparent"></div>
-                <div className="absolute bottom-8 left-8 right-8">
-                  <span className="text-[#B88E52] text-xs font-bold uppercase tracking-wider mb-2 block">Jurassic Experience</span>
-                  <h3 className="text-3xl font-bold text-white mb-2">Komodo Park</h3>
-                  <p className="text-white/80 text-sm leading-relaxed">Encounter the legendary prehistoric dragons safely in their natural habitat.</p>
-                </div>
-              </div>
-            </motion.a>
-
-            {/* Card 3: Pink Beach */}
-            <motion.a href="/expedition" variants={fadeInUp} className="group rounded-[2rem] overflow-hidden shadow-xl shadow-gray-200/60 border border-gray-100 block">
-              <div className="relative h-96 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1724127722795-96efb9caffbc?q=80&w=929&auto=format&fit=crop" alt="Pink Beach" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/90 via-[#11223a]/20 to-transparent"></div>
-                <div className="absolute bottom-8 left-8 right-8">
-                  <span className="text-[#B88E52] text-xs font-bold uppercase tracking-wider mb-2 block">Pristine Waters</span>
-                  <h3 className="text-3xl font-bold text-white mb-2">Pink Beach</h3>
-                  <p className="text-white/80 text-sm leading-relaxed">Relax on striking pink sands and snorkel in crystal-clear tropical waters.</p>
-                </div>
-              </div>
-            </motion.a>
-          </motion.div>
+          {isLoadingItinerary ? (
+            <div className="flex flex-col items-center justify-center h-[300px]">
+              <Loader2 className="w-10 h-10 text-[#B88E52] animate-spin mb-4" />
+              <p className="text-gray-500 font-medium">Loading The Route...</p>
+            </div>
+          ) : (
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={staggerContainer}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            >
+              {itinerary.map((day, idx) => (
+                <motion.a 
+                  key={idx} 
+                  href="/expedition" 
+                  variants={fadeInUp} 
+                  className="group rounded-[2rem] overflow-hidden shadow-xl shadow-gray-200/60 border border-gray-100 block"
+                >
+                  <div className="relative h-80 overflow-hidden">
+                    <img src={day.image || defaultItineraryFallback[idx % 4].image} alt={day.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/90 via-[#11223a]/20 to-transparent"></div>
+                    <div className="absolute bottom-6 left-6 right-6">
+                      <span className="text-[#B88E52] text-xs font-bold uppercase tracking-wider mb-2 block">{day.day || `DAY ${idx + 1}`}</span>
+                      <h3 className="text-2xl font-bold text-white mb-2 leading-tight">{day.title}</h3>
+                    </div>
+                  </div>
+                </motion.a>
+              ))}
+            </motion.div>
+          )}
         </div>
       </section>
 
@@ -660,7 +676,8 @@ export default function PublicHomepage() {
               {reviews.map((testi, idx) => (
                 <div 
                   key={testi.id || idx} 
-                  className="min-w-[340px] md:min-w-[400px] max-w-[420px] bg-white p-8 md:p-10 rounded-[2.5rem] shadow-xl shadow-gray-200/40 border border-gray-100 relative overflow-hidden flex flex-col snap-start shrink-0 hover:-translate-y-2 transition-transform duration-300"
+                  onClick={() => setSelectedReview(testi)}
+                  className="min-w-[340px] md:min-w-[400px] max-w-[420px] h-[520px] bg-white p-8 md:p-10 rounded-[2.5rem] shadow-xl shadow-gray-200/40 border border-gray-100 relative overflow-hidden flex flex-col snap-start shrink-0 hover:-translate-y-2 transition-transform duration-300 cursor-pointer group"
                 >
                   <Quote className="absolute top-8 right-8 w-20 h-20 text-[#B88E52]/10 rotate-180 pointer-events-none" />
                   
@@ -668,25 +685,28 @@ export default function PublicHomepage() {
                     {[...Array(5)].map((_, i) => <Star key={i} className={`w-5 h-5 ${i < (testi.rating || 5) ? 'fill-[#B88E52] text-[#B88E52]' : 'fill-transparent text-gray-300'}`} />)}
                   </div>
                   
-                  <p className="text-gray-700 text-lg leading-relaxed mb-6 relative z-10 flex-grow italic font-light">
+                  <p className="text-gray-700 text-lg leading-relaxed relative z-10 italic font-light line-clamp-4">
                     "{testi.text}"
                   </p>
+                  <span className="text-[#B88E52] text-sm font-bold mt-2 mb-4 block group-hover:underline">Read full story...</span>
 
-                  {/* Moment Photo Section */}
-                  {testi.image && (
-                    <div className="w-full h-48 rounded-2xl overflow-hidden mb-6 relative z-10 shadow-sm border border-gray-100 shrink-0">
-                      <img src={testi.image} alt="Guest Moment" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
-                    </div>
-                  )}
-                  
-                  {/* Avatar & Info */}
-                  <div className="flex items-center gap-4 mt-auto relative z-10 pt-6 border-t border-gray-50">
-                    <div className="w-12 h-12 shrink-0 rounded-full bg-[#fdfaf5] border border-[#B88E52]/20 shadow-sm flex items-center justify-center text-xl font-bold text-[#B88E52]">
-                      {testi.name?.charAt(0).toUpperCase() || "G"}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-[#11223a]">{testi.name}</h4>
-                      <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">{testi.origin}</span>
+                  <div className="mt-auto flex flex-col gap-4 relative z-10">
+                    {/* Moment Photo Section - Fixed Height */}
+                    {testi.image && (
+                      <div className="w-full h-32 rounded-2xl overflow-hidden shadow-sm border border-gray-100 shrink-0">
+                        <img src={testi.image} alt="Guest Moment" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                    )}
+                    
+                    {/* Avatar & Info */}
+                    <div className="flex items-center gap-4 pt-4 border-t border-gray-50">
+                      <div className="w-12 h-12 shrink-0 rounded-full bg-[#fdfaf5] border border-[#B88E52]/20 shadow-sm flex items-center justify-center text-xl font-bold text-[#B88E52]">
+                        {testi.name?.charAt(0).toUpperCase() || "G"}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-[#11223a]">{testi.name}</h4>
+                        <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">{testi.origin}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -794,7 +814,7 @@ export default function PublicHomepage() {
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12 relative z-10">
-          {/* Card B2C */}
+          {/* Card B2C - COMING SOON */}
           <motion.div 
             initial="hidden"
             whileInView="visible"
@@ -803,29 +823,23 @@ export default function PublicHomepage() {
             whileHover={{ y: -8 }}
             className="group bg-white rounded-[2.5rem] p-10 lg:p-12 shadow-2xl shadow-gray-200 border border-gray-100 flex flex-col h-full relative overflow-hidden transition-all duration-300"
           >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#B88E52]/10 to-transparent rounded-bl-full pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-gray-100 to-transparent rounded-bl-full pointer-events-none"></div>
             
-            <div className="h-20 w-20 rounded-[1.5rem] bg-[#fdfaf5] border border-[#B88E52]/30 flex items-center justify-center mb-8 group-hover:scale-110 group-hover:bg-[#B88E52] group-hover:text-white transition-all duration-500 text-[#B88E52]">
+            <div className="h-20 w-20 rounded-[1.5rem] bg-gray-50 border border-gray-200 flex items-center justify-center mb-8 text-gray-400">
               <Gift className="h-10 w-10" />
             </div>
-            <h3 className="text-3xl lg:text-4xl font-bold text-[#11223a] mb-4">For Explorers</h3>
+            <h3 className="text-3xl lg:text-4xl font-bold text-gray-400 mb-4">For Explorers</h3>
             <div className="space-y-6 mb-10 flex-grow">
-              <p className="text-gray-600 text-lg">Join the <strong>Expedition Tiers</strong> program.</p>
+              <p className="text-gray-400 text-lg">Join the <strong>Expedition Tiers</strong> program.</p>
               <ul className="space-y-4">
-                <li className="flex items-center gap-3 text-gray-700 font-medium"><CheckCircle2 className="h-6 w-6 text-[#B88E52]" /> Earn points for every cabin</li>
-                <li className="flex items-center gap-3 text-gray-700 font-medium"><CheckCircle2 className="h-6 w-6 text-[#B88E52]" /> Unlock the VIP Rewards Store</li>
-                <li className="flex items-center gap-3 text-[#11223a] font-bold bg-[#fdfaf5] p-3 rounded-xl border border-[#B88E52]/20"><CheckCircle2 className="h-6 w-6 text-[#B88E52]" /> IDR 500.000 Welcome Voucher</li>
+                <li className="flex items-center gap-3 text-gray-400 font-medium"><CheckCircle2 className="h-6 w-6 text-gray-300" /> Earn points for every cabin</li>
+                <li className="flex items-center gap-3 text-gray-400 font-medium"><CheckCircle2 className="h-6 w-6 text-gray-300" /> Unlock the VIP Rewards Store</li>
+                <li className="flex items-center gap-3 text-gray-400 font-bold bg-gray-50 p-3 rounded-xl border border-gray-100"><CheckCircle2 className="h-6 w-6 text-gray-300" /> Welcome Vouchers</li>
               </ul>
             </div>
-            <a 
-              id="btn-wa-explorer-voucher"
-              href={b2cWaLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 w-full py-4 lg:py-5 rounded-2xl bg-[#11223a] text-white font-bold hover:bg-[#0f1f33] transition-colors text-lg shadow-xl hover:shadow-2xl"
-            >
-              Claim Welcome Voucher
-            </a>
+            <div className="inline-flex items-center justify-center gap-2 w-full py-4 lg:py-5 rounded-2xl bg-gray-100 text-gray-400 font-bold text-lg cursor-not-allowed">
+              Coming Soon
+            </div>
           </motion.div>
 
           {/* Card B2B */}
@@ -867,6 +881,65 @@ export default function PublicHomepage() {
           </motion.div>
         </div>
       </section>
+
+      {/* FULLSCREEN REVIEW MODAL (LIGHTBOX) */}
+      <AnimatePresence>
+        {selectedReview && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8"
+            onClick={() => setSelectedReview(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setSelectedReview(null)} 
+                className="absolute top-4 right-4 z-20 w-10 h-10 bg-white/50 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-gray-100 text-gray-800 transition-colors shadow-sm border border-gray-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Kiri: Foto Momen (Hanya jika ada) */}
+              {selectedReview.image && (
+                <div className="w-full md:w-2/5 h-64 md:h-auto shrink-0 bg-gray-100 relative">
+                  <img src={selectedReview.image} alt="Guest Moment" className="w-full h-full object-cover" />
+                </div>
+              )}
+
+              {/* Kanan: Teks Ulasan */}
+              <div className={`p-8 md:p-12 flex flex-col overflow-y-auto custom-scrollbar ${selectedReview.image ? 'md:w-3/5' : 'w-full'}`}>
+                <div className="flex gap-1 text-[#B88E52] mb-6">
+                  {[...Array(5)].map((_, i) => <Star key={i} className={`w-5 h-5 ${i < (selectedReview.rating || 5) ? 'fill-[#B88E52] text-[#B88E52]' : 'fill-transparent text-gray-300'}`} />)}
+                </div>
+                
+                <h3 className="text-2xl font-bold text-[#11223a] mb-6">"An Unforgettable Journey"</h3>
+                
+                <p className="text-gray-700 text-lg leading-relaxed italic font-light mb-10 whitespace-pre-wrap">
+                  "{selectedReview.text}"
+                </p>
+
+                <div className="flex items-center gap-4 mt-auto pt-6 border-t border-gray-100">
+                  <div className="w-14 h-14 shrink-0 rounded-full bg-[#fdfaf5] border border-[#B88E52]/20 shadow-sm flex items-center justify-center text-2xl font-bold text-[#B88E52]">
+                    {selectedReview.name?.charAt(0).toUpperCase() || "G"}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#11223a] text-lg">{selectedReview.name}</h4>
+                    <span className="text-sm text-gray-500 uppercase tracking-wider font-semibold">{selectedReview.origin}</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </main>
   );
 }

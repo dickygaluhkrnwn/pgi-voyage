@@ -14,8 +14,6 @@ import {
   LogOut, 
   ShieldCheck,
   Ship,
-  ChevronLeft,
-  ChevronRight,
   Map,
   Star // Ikon baru untuk menu Reviews
 } from 'lucide-react';
@@ -26,7 +24,7 @@ const sidebarLinks = [
   { name: 'Blog & Journal', href: '/admin/blog', icon: BookOpen },
   { name: 'Gallery Assets', href: '/admin/gallery', icon: ImageIcon },
   { name: 'Expedition', href: '/admin/expedition', icon: Map },
-  { name: 'Guest Reviews', href: '/admin/reviews', icon: Star }, // Menu baru
+  { name: 'Guest Reviews', href: '/admin/reviews', icon: Star },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
@@ -157,19 +155,13 @@ export default function AdminSidebar({
     <>
       {/* DESKTOP SIDEBAR */}
       <motion.aside 
+        onMouseEnter={() => setIsCollapsed(false)} // Melebar saat di-hover
+        onMouseLeave={() => setIsCollapsed(true)}  // Mengecil saat kursor pergi
         animate={{ width: isCollapsed ? 80 : 288 }} // 80px = w-20, 288px = w-72
         transition={{ type: "spring", bounce: 0, duration: 0.4 }}
         className="hidden lg:flex flex-col bg-[#0b1728] border-r border-[#11223a] fixed h-full z-30 shadow-2xl"
       >
         <SidebarContent />
-
-        {/* Toggle Collapse Button */}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3 top-10 bg-[#B88E52] text-white p-1 rounded-full shadow-lg border-2 border-[#f8f9fa] hover:scale-110 transition-transform z-40"
-        >
-          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-        </button>
       </motion.aside>
 
       {/* MOBILE SIDEBAR OVERLAY */}
