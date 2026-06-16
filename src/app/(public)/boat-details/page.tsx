@@ -20,12 +20,12 @@ const staggerContainer: Variants = {
   }
 };
 
-// URL Aset Asli dari Kamu
+// URL Aset 
 const imgPadar = "https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=773&auto=format&fit=crop";
 const imgWhaleShark = "https://images.unsplash.com/photo-1580580297368-c782fb65d271?q=80&w=774&auto=format&fit=crop";
 const imgKomodo = "https://images.unsplash.com/photo-1717238977683-5f06a9e60694?q=80&w=870&auto=format&fit=crop";
 const imgPinkBeach = "https://images.unsplash.com/photo-1724127722795-96efb9caffbc?q=80&w=929&auto=format&fit=crop";
-const imgVessel = "/images/Kapal_Pulau_Mas_88.png";
+const imgVessel = "https://res.cloudinary.com/danyx7uny/image/upload/v1781582217/obuwude82h22wr1wvscz.png";
 
 // --- DATA: LEGAL DOCUMENTS ---
 const safetyDocuments = [
@@ -165,115 +165,151 @@ const specifications = [
 
 export default function BoatDetailsPage() {
   const waNumber = "6287817865690";
-  const generalWaLink = `https://wa.me/${waNumber}?text=Hi%20PGI%20Voyage,%20I%20want%20to%20know%20more%20about%20the%20KM%20Pulau%20Mas%2088%20boat%20details.`;
+  const generalWaLink = `https://wa.me/${waNumber}?text=Hi%20PMM%20Voyage,%20I%20want%20to%20know%20more%20about%20the%20KM%20Pulau%20Mas%2088%20boat%20details.`;
 
   return (
     <main className="flex flex-col w-full bg-[#f8f9fa] overflow-x-hidden">
       
-      {/* 1. HERO SECTION (Cinematic Vessel Focus) */}
-      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-6 lg:px-12 bg-[#11223a] overflow-hidden flex flex-col items-center justify-center min-h-screen">
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-[20s] hover:scale-105" 
-          style={{ backgroundImage: `url('${imgVessel}')` }}
-        ></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#11223a]/90 via-[#11223a]/40 to-[#11223a]"></div>
+      {/* 1. HERO SECTION (EDITORIAL & MODERN SHOWCASE) */}
+      <section className="relative pt-32 pb-48 lg:pt-48 lg:pb-64 bg-[#11223a] overflow-hidden flex flex-col items-center text-center px-6 border-b border-white/10">
+        {/* Background Subtle Ornaments */}
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#B88E52]/10 rounded-full blur-[120px] pointer-events-none"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-900/20 rounded-full blur-[120px] pointer-events-none"></div>
         
         <motion.div 
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="relative z-10 max-w-4xl mx-auto text-center mt-12"
+          className="relative z-10 max-w-4xl mx-auto"
         >
-          <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-[#B88E52]/60 text-[#B88E52] text-sm font-semibold mb-6 backdrop-blur-md shadow-lg uppercase tracking-widest">
+          <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-[#B88E52] text-xs font-bold mb-8 backdrop-blur-md uppercase tracking-widest shadow-sm">
             <ShieldCheck className="h-4 w-4" />
             Verified Direct Operator
           </motion.div>
-          <motion.h1 variants={fadeInUp} className="text-4xl md:text-6xl lg:text-8xl font-bold text-white mb-6 drop-shadow-2xl leading-tight">
+          
+          <motion.h1 variants={fadeInUp} className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-6 tracking-tight leading-[1.1] drop-shadow-xl">
             KM Pulau Mas 88
           </motion.h1>
-          <motion.p variants={fadeInUp} className="text-lg md:text-xl lg:text-2xl text-white/80 max-w-3xl mx-auto leading-relaxed font-light drop-shadow-md">
-            Built for adventure. Engineered for safety. <br className="hidden md:block" /> Explore the specifications, amenities, and official legalities of our flagship vessel.
+          
+          <motion.p variants={fadeInUp} className="text-lg md:text-xl lg:text-2xl text-white/70 max-w-2xl mx-auto leading-relaxed font-light">
+            Built for true adventure. Engineered for uncompromised safety. Discover the flagship vessel of our Komodo expeditions.
           </motion.p>
         </motion.div>
-
-        {/* Scroll Indicator */}
-        <motion.div 
-          animate={{ y: [0, 10, 0] }} 
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="absolute bottom-10 left-1/2 transform -translate-x-1/2 text-white/50 flex flex-col items-center"
-        >
-          <span className="text-xs uppercase tracking-widest mb-2">Scroll to Discover</span>
-          <div className="w-px h-12 bg-gradient-to-b from-[#B88E52] to-transparent"></div>
-        </motion.div>
       </section>
 
-      {/* 2. OVERVIEW & DESTINATIONS GALLERY */}
-      <section className="py-24 px-6 lg:px-12 bg-white relative">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#B88E52]/5 rounded-full blur-3xl pointer-events-none"></div>
+      {/* CONTAINER FOR OVERLAPPING ELEMENT & NEXT SECTION */}
+      <div className="bg-[#f8f9fa] w-full relative">
         
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 items-center relative z-10">
-          
+        {/* 2. OVERLAPPING VESSEL SHOWCASE */}
+        <section className="relative z-20 -mt-32 lg:-mt-48 px-6 lg:px-12 max-w-7xl mx-auto w-full">
           <motion.div 
             initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            className="w-full lg:w-1/2 space-y-8"
-          >
-            <div>
-              <motion.span variants={fadeInUp} className="text-[#B88E52] font-semibold tracking-wider uppercase text-sm mb-3 block">The Experience</motion.span>
-              <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-bold text-[#11223a] leading-tight">
-                Designed for the <br /> Ultimate Voyage
-              </motion.h2>
-            </div>
-            
-            <motion.p variants={fadeInUp} className="text-gray-600 text-lg leading-relaxed">
-              Experience the untamed beauty of Komodo National Park with an affordable yet premium sailing trip aboard <strong>KM Pulau Mas 88</strong>. We bridge the gap between backpacker adventure and essential comfort.
-            </motion.p>
-            <motion.p variants={fadeInUp} className="text-gray-600 text-lg leading-relaxed">
-              Sail through stunning archipelagos, swim alongside majestic whale sharks, encounter legendary prehistoric dragons, and relax on pristine pink sands. Our vessel is your floating sanctuary throughout this unforgettable 4D3N journey.
-            </motion.p>
-            
-            <motion.div variants={fadeInUp} className="pt-6 border-t border-gray-100 flex items-center gap-6">
-               <div className="flex -space-x-4">
-                 <img src={imgWhaleShark} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" alt="Wildlife" />
-                 <img src={imgPadar} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" alt="Landscapes" />
-                 <img src={imgPinkBeach} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" alt="Beaches" />
-               </div>
-               <p className="text-sm font-bold text-[#11223a]">Unlocking 10+ <br/><span className="text-gray-500 font-normal">Breathtaking Destinations</span></p>
-            </motion.div>
-          </motion.div>
-
-          {/* Aesthetic Bento Collage of Destinations */}
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
+            animate="visible"
             variants={fadeInUp}
-            className="w-full lg:w-1/2 grid grid-cols-2 gap-4 md:gap-6 h-[500px] md:h-[600px]"
+            className="relative rounded-[2.5rem] lg:rounded-[3rem] overflow-hidden shadow-2xl shadow-[#11223a]/30 border-4 md:border-[8px] border-white aspect-square md:aspect-video bg-gray-100 group"
           >
-            <div className="col-span-1 grid grid-rows-2 gap-4 md:gap-6 h-full">
-              <div className="row-span-1 rounded-[2rem] overflow-hidden shadow-xl group">
-                <img src={imgKomodo} alt="Komodo" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+            <img 
+              src={imgVessel} 
+              alt="KM Pulau Mas 88 Showcase" 
+              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
+            />
+            {/* Soft dark gradient at bottom for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/90 via-[#11223a]/10 to-transparent pointer-events-none"></div>
+            
+            {/* Floating Stats Bar */}
+            <div className="absolute bottom-4 left-4 right-4 md:bottom-8 md:left-8 md:right-8 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl md:rounded-[2rem] p-5 md:p-8 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-0 text-white shadow-2xl">
+              <div className="text-center md:border-r border-white/10">
+                 <span className="block text-[#B88E52] text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">Capacity</span>
+                 <span className="text-xl md:text-3xl font-bold tracking-tight">46 Pax</span>
               </div>
-              <div className="row-span-1 rounded-[2rem] overflow-hidden shadow-xl group relative">
-                <img src={imgPinkBeach} alt="Pink Beach" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/80 to-transparent"></div>
-                <div className="absolute bottom-6 left-6 text-white font-bold tracking-wide">Pink Beach</div>
+              <div className="text-center md:border-r border-white/10">
+                 <span className="block text-[#B88E52] text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">Crew</span>
+                 <span className="text-xl md:text-3xl font-bold tracking-tight">8 Pro</span>
               </div>
-            </div>
-            <div className="col-span-1 rounded-[2rem] overflow-hidden shadow-xl group relative h-full">
-              <img src={imgPadar} alt="Padar Island" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/80 to-transparent"></div>
-              <div className="absolute bottom-6 left-6 text-white font-bold tracking-wide text-xl">Padar Island</div>
+              <div className="text-center md:border-r border-white/10">
+                 <span className="block text-[#B88E52] text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">Vessel Type</span>
+                 <span className="text-xl md:text-3xl font-bold tracking-tight">Phinisi</span>
+              </div>
+              <div className="text-center">
+                 <span className="block text-[#B88E52] text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">Navigation</span>
+                 <span className="text-xl md:text-3xl font-bold tracking-tight">GPS/Radar</span>
+              </div>
             </div>
           </motion.div>
-        </div>
-      </section>
+        </section>
 
-      {/* 3. BOAT SPECIFICATIONS - TECHNICAL SHEET STYLE (REVISED) */}
-      <section className="py-24 px-6 lg:px-12 bg-[#f8f9fa] border-y border-gray-200 relative">
-        {/* Background Ornament */}
+        {/* 3. OVERVIEW & DESTINATIONS GALLERY */}
+        <section className="py-24 lg:py-32 px-6 lg:px-12 relative z-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#B88E52]/5 rounded-full blur-3xl pointer-events-none"></div>
+          
+          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 items-center relative z-10">
+            
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={staggerContainer}
+              className="w-full lg:w-1/2 space-y-8"
+            >
+              <div>
+                <motion.span variants={fadeInUp} className="text-[#B88E52] font-semibold tracking-wider uppercase text-sm mb-3 block">The Experience</motion.span>
+                <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-bold text-[#11223a] leading-tight">
+                  Designed for the <br /> Ultimate Voyage
+                </motion.h2>
+              </div>
+              
+              <motion.p variants={fadeInUp} className="text-gray-600 text-lg leading-relaxed">
+                Experience the untamed beauty of Komodo National Park with an affordable yet premium sailing trip aboard <strong>KM Pulau Mas 88</strong>. We bridge the gap between backpacker adventure and essential comfort.
+              </motion.p>
+              <motion.p variants={fadeInUp} className="text-gray-600 text-lg leading-relaxed">
+                Sail through stunning archipelagos, swim alongside majestic whale sharks, encounter legendary prehistoric dragons, and relax on pristine pink sands. Our vessel is your floating sanctuary throughout this unforgettable 4D3N journey.
+              </motion.p>
+              
+              <motion.div variants={fadeInUp} className="pt-6 border-t border-gray-100 flex items-center gap-6">
+                 <div className="flex -space-x-4">
+                   <img src={imgWhaleShark} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" alt="Wildlife" />
+                   <img src={imgPadar} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" alt="Landscapes" />
+                   <img src={imgPinkBeach} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" alt="Beaches" />
+                 </div>
+                 <p className="text-sm font-bold text-[#11223a]">Unlocking 10+ <br/><span className="text-gray-500 font-normal">Breathtaking Destinations</span></p>
+              </motion.div>
+            </motion.div>
+
+            {/* Aesthetic Bento Collage of Destinations */}
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeInUp}
+              className="w-full lg:w-1/2 grid grid-cols-2 grid-rows-2 gap-4 md:gap-6 h-[500px] md:h-[600px]"
+            >
+              {/* Top Left - Komodo */}
+              <div className="col-span-1 row-span-1 rounded-[2rem] overflow-hidden shadow-xl group relative h-full">
+                <img src={imgKomodo} alt="Komodo" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/80 to-transparent opacity-70"></div>
+                <div className="absolute bottom-5 left-5 text-white font-bold tracking-wide text-lg md:text-xl">Komodo Park</div>
+              </div>
+
+              {/* Top Right - Pink Beach */}
+              <div className="col-span-1 row-span-1 rounded-[2rem] overflow-hidden shadow-xl group relative h-full">
+                <img src={imgPinkBeach} alt="Pink Beach" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/80 to-transparent opacity-70"></div>
+                <div className="absolute bottom-5 left-5 text-white font-bold tracking-wide text-lg md:text-xl">Pink Beach</div>
+              </div>
+
+              {/* Bottom Full Width - Padar Island */}
+              <div className="col-span-2 row-span-1 rounded-[2rem] overflow-hidden shadow-xl group relative h-full">
+                <img src={imgPadar} alt="Padar Island" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/90 via-[#11223a]/20 to-transparent opacity-80"></div>
+                <div className="absolute bottom-6 left-6 text-white font-bold tracking-wide text-2xl md:text-3xl">Padar Island</div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      </div>
+
+      {/* 4. BOAT SPECIFICATIONS - TECHNICAL SHEET STYLE */}
+      <section className="py-24 px-6 lg:px-12 bg-white border-y border-gray-100 relative">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#B88E52]/5 rounded-full blur-[100px] pointer-events-none"></div>
         
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 relative z-10">
@@ -294,7 +330,7 @@ export default function BoatDetailsPage() {
               Engineered for comfort and safety. Explore the full technical capabilities and onboard amenities of KM Pulau Mas 88.
             </p>
             
-            <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <div className="p-6 bg-[#f8f9fa] rounded-2xl border border-gray-100 shadow-sm">
               <Info className="w-6 h-6 text-[#B88E52] mb-3" />
               <p className="text-sm text-gray-600 leading-relaxed">
                 <strong>Important Note:</strong> WiFi availability depends on mobile signal coverage. Routes and activities may be adjusted to ensure passenger safety based on weather conditions.
@@ -314,10 +350,10 @@ export default function BoatDetailsPage() {
               <motion.div 
                 key={index} 
                 variants={fadeInUp}
-                className="border-t border-gray-200 pt-6 group"
+                className="border-t border-gray-100 pt-6 group"
               >
                 <div className="flex items-center gap-4 mb-5">
-                  <div className="w-12 h-12 rounded-full bg-white border border-[#B88E52]/20 flex items-center justify-center text-[#B88E52] shadow-sm group-hover:bg-[#B88E52] group-hover:text-white transition-colors duration-300">
+                  <div className="w-12 h-12 rounded-full bg-[#f8f9fa] border border-[#B88E52]/20 flex items-center justify-center text-[#B88E52] shadow-sm group-hover:bg-[#B88E52] group-hover:text-white transition-colors duration-300">
                     {spec.icon}
                   </div>
                   <h3 className="text-xl font-bold text-[#11223a]">{spec.title}</h3>
@@ -337,7 +373,7 @@ export default function BoatDetailsPage() {
         </div>
       </section>
 
-      {/* 4. TECHNICAL DRAWINGS (DARK ARCHITECTURAL THEME) */}
+      {/* 5. TECHNICAL DRAWINGS (DARK ARCHITECTURAL THEME) */}
       <section className="py-24 px-6 lg:px-12 bg-[#0b1728] text-white relative overflow-hidden">
         {/* Blueprint Grid Background Pattern */}
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
@@ -388,8 +424,8 @@ export default function BoatDetailsPage() {
         </div>
       </section>
 
-      {/* 5. GRID LEGAL DOCUMENTS SECTION */}
-      <section className="py-24 px-6 lg:px-12 bg-white">
+      {/* 6. GRID LEGAL DOCUMENTS SECTION */}
+      <section className="py-24 px-6 lg:px-12 bg-[#f8f9fa]">
         <div className="max-w-7xl mx-auto">
           
           <div className="text-center mb-16 max-w-3xl mx-auto">
@@ -411,9 +447,9 @@ export default function BoatDetailsPage() {
               <motion.div 
                 key={index}
                 variants={fadeInUp}
-                className="bg-[#fdfaf5] rounded-[2rem] p-8 border border-[#B88E52]/10 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 group flex flex-col"
+                className="bg-white rounded-[2rem] p-8 border border-gray-100 hover:shadow-xl hover:border-[#B88E52]/20 hover:-translate-y-2 transition-all duration-300 group flex flex-col"
               >
-                <div className="h-16 w-16 rounded-2xl bg-white border border-[#B88E52]/20 flex items-center justify-center mb-6 shadow-sm group-hover:bg-[#B88E52] group-hover:border-[#B88E52] transition-colors duration-300">
+                <div className="h-16 w-16 rounded-2xl bg-[#fdfaf5] border border-[#B88E52]/20 flex items-center justify-center mb-6 shadow-sm group-hover:bg-[#B88E52] group-hover:border-[#B88E52] transition-colors duration-300">
                    <div className="group-hover:text-white transition-colors duration-300">
                      {doc.icon}
                    </div>
@@ -424,7 +460,7 @@ export default function BoatDetailsPage() {
                   {doc.desc}
                 </p>
                 
-                <div className="mt-auto pt-6 border-t border-[#B88E52]/10">
+                <div className="mt-auto pt-6 border-t border-gray-100">
                   <a 
                     href={doc.link} 
                     target="_blank" 
@@ -440,8 +476,8 @@ export default function BoatDetailsPage() {
         </div>
       </section>
 
-      {/* 6. CTA SECTION */}
-      <section className="py-24 px-6 text-center bg-[#f8f9fa] border-t border-gray-100">
+      {/* 7. CTA SECTION */}
+      <section className="py-24 px-6 text-center bg-white border-t border-gray-100">
         <motion.div 
           initial="hidden"
           whileInView="visible"
