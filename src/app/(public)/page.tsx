@@ -381,7 +381,7 @@ export default function PublicHomepage() {
             className="w-full lg:w-1/2 relative"
           >
             <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-gray-200 border border-gray-100 group cursor-pointer aspect-[4/5] md:aspect-square lg:aspect-[4/5]">
-              <img src="https://res.cloudinary.com/danyx7uny/image/upload/v1781582217/obuwude82h22wr1wvscz.png" alt="KM Pulau Mas 88" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <img src="/images/Kapal_Pulau_Mas_88.png" alt="KM Pulau Mas 88" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/90 via-[#11223a]/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="absolute bottom-8 left-8 right-8 text-white">
                  <div className="inline-block bg-[#B88E52] text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg uppercase tracking-wider mb-3">
@@ -438,7 +438,7 @@ export default function PublicHomepage() {
         </div>
       </section>
 
-      {/* 4. DESTINATIONS TEASER SECTION (4 Days of Wonder) */}
+      {/* 4. DESTINATIONS TEASER SECTION */}
       <section className="py-24 px-6 lg:px-12 bg-white relative">
         <div className="max-w-7xl mx-auto">
           <motion.div 
@@ -882,7 +882,7 @@ export default function PublicHomepage() {
         </div>
       </section>
 
-      {/* FULLSCREEN REVIEW MODAL (LIGHTBOX) */}
+      {/* FULLSCREEN REVIEW MODAL (LIGHTBOX) DENGAN BALASAN ADMIN */}
       <AnimatePresence>
         {selectedReview && (
           <motion.div 
@@ -913,7 +913,7 @@ export default function PublicHomepage() {
                 </div>
               )}
 
-              {/* Kanan: Teks Ulasan */}
+              {/* Kanan: Teks Ulasan & Balasan Admin */}
               <div className={`p-8 md:p-12 flex flex-col overflow-y-auto custom-scrollbar ${selectedReview.image ? 'md:w-3/5' : 'w-full'}`}>
                 <div className="flex gap-1 text-[#B88E52] mb-6">
                   {[...Array(5)].map((_, i) => <Star key={i} className={`w-5 h-5 ${i < (selectedReview.rating || 5) ? 'fill-[#B88E52] text-[#B88E52]' : 'fill-transparent text-gray-300'}`} />)}
@@ -924,6 +924,20 @@ export default function PublicHomepage() {
                 <p className="text-gray-700 text-lg leading-relaxed italic font-light mb-10 whitespace-pre-wrap">
                   "{selectedReview.text}"
                 </p>
+
+                {/* ===== BALASAN DARI PMM VOYAGE ===== */}
+                {selectedReview.reply && (
+                  <div className="mb-10 bg-gray-50 border-l-4 border-[#B88E52] p-6 rounded-r-2xl relative shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ShieldCheck className="w-5 h-5 text-[#B88E52]" />
+                      <span className="font-bold text-[#11223a] text-sm uppercase tracking-wider">PMM Voyage Team</span>
+                    </div>
+                    <p className="text-gray-600 text-base leading-relaxed whitespace-pre-wrap">
+                      {selectedReview.reply}
+                    </p>
+                  </div>
+                )}
+                {/* =================================== */}
 
                 <div className="flex items-center gap-4 mt-auto pt-6 border-t border-gray-100">
                   <div className="w-14 h-14 shrink-0 rounded-full bg-[#fdfaf5] border border-[#B88E52]/20 shadow-sm flex items-center justify-center text-2xl font-bold text-[#B88E52]">

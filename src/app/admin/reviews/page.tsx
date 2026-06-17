@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc, limit, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -20,7 +20,9 @@ import {
   LayoutGrid,
   LayoutList,
   Eye,
-  X
+  X,
+  MessageCircleReply,
+  Send
 } from 'lucide-react';
 
 interface Review {
@@ -32,6 +34,8 @@ interface Review {
   image?: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: any;
+  reply?: string;
+  repliedAt?: any;
 }
 
 type FilterType = 'all' | 'pending' | 'approved' | 'rejected';
@@ -46,6 +50,10 @@ export default function AdminReviewsPage() {
   // New UI/UX States
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list'); // Default to list for better management
   const [selectedReview, setSelectedReview] = useState<Review | null>(null); // For modal preview
+  
+  // Reply States
+  const [replyText, setReplyText] = useState("");
+  const [isReplying, setIsReplying] = useState(false);
 
   const fetchReviews = async () => {
     setIsLoading(true);
@@ -106,6 +114,36 @@ export default function AdminReviewsPage() {
     } finally {
       setProcessingId(null);
     }
+  };
+
+  const handleSendReply = async () => {
+    if (!selectedReview || !replyText.trim()) return;
+    setIsReplying(true);
+    try {
+      await updateDoc(doc(db, 'reviews', selectedReview.id), {
+        reply: replyText.trim(),
+        repliedAt: serverTimestamp()
+      });
+      
+      // Update local state
+      const updatedReviews = reviews.map(r => 
+        r.id === selectedReview.id ? { ...r, reply: replyText.trim() } : r
+      );
+      setReviews(updatedReviews);
+      setSelectedReview({ ...selectedReview, reply: replyText.trim() });
+      
+      alert("Balasan berhasil disimpan!");
+    } catch (error) {
+      console.error("Error saving reply:", error);
+      alert("Gagal menyimpan balasan.");
+    } finally {
+      setIsReplying(false);
+    }
+  };
+
+  const openPreview = (review: Review) => {
+    setSelectedReview(review);
+    setReplyText(review.reply || ""); // Set textarea dengan reply yang sudah ada
   };
 
   const filteredReviews = reviews.filter(rev => {
@@ -246,7 +284,7 @@ export default function AdminReviewsPage() {
                     )}
 
                     {/* Avatar / Thumbnail */}
-                    <div className="w-14 h-14 shrink-0 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center relative cursor-pointer" onClick={() => setSelectedReview(review)}>
+                    <div className="w-14 h-14 shrink-0 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center relative cursor-pointer" onClick={() => openPreview(review)}>
                       {review.image ? (
                         <>
                           <img src={review.image} alt={review.name} className="w-full h-full object-cover" />
@@ -274,6 +312,12 @@ export default function AdminReviewsPage() {
                         </div>
                         <p className="text-sm text-gray-600 line-clamp-1 italic">"{review.text}"</p>
                       </div>
+                      {/* Reply Indicator */}
+                      {review.reply && (
+                        <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md w-fit">
+                          <MessageCircleReply className="w-3.5 h-3.5" /> Dibalas
+                        </div>
+                      )}
                     </div>
 
                     {/* Status & Actions */}
@@ -287,9 +331,9 @@ export default function AdminReviewsPage() {
 
                       <div className="flex gap-1.5">
                         <button 
-                          onClick={() => setSelectedReview(review)}
+                          onClick={() => openPreview(review)}
                           className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white rounded-lg transition-colors border border-blue-100"
-                          title="Preview Detail"
+                          title="Lihat & Balas"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -366,7 +410,7 @@ export default function AdminReviewsPage() {
 
                     {/* Image Attachment */}
                     {review.image ? (
-                      <div className="h-48 w-full bg-gray-100 relative group overflow-hidden cursor-pointer" onClick={() => setSelectedReview(review)}>
+                      <div className="h-48 w-full bg-gray-100 relative group overflow-hidden cursor-pointer" onClick={() => openPreview(review)}>
                         <img src={review.image} alt="Review attachment" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                            <span className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl text-white text-sm font-bold flex items-center gap-2"><Eye className="w-4 h-4"/> Lihat Foto</span>
@@ -395,23 +439,36 @@ export default function AdminReviewsPage() {
                       {/* Review Text */}
                       <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex-grow mb-6 relative">
                         <Quote className="absolute top-2 right-2 w-8 h-8 text-gray-200 rotate-180" />
-                        <p className="text-gray-700 text-sm leading-relaxed relative z-10 font-medium italic line-clamp-4 hover:line-clamp-none transition-all cursor-pointer" onClick={() => setSelectedReview(review)}>
+                        <p className="text-gray-700 text-sm leading-relaxed relative z-10 font-medium italic line-clamp-4 hover:line-clamp-none transition-all cursor-pointer" onClick={() => openPreview(review)}>
                           "{review.text}"
                         </p>
                       </div>
 
+                      {/* Reply Indicator */}
+                      {review.reply && (
+                        <div className="mb-4 flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg w-fit">
+                          <MessageCircleReply className="w-4 h-4" /> Telah Dibalas
+                        </div>
+                      )}
+
                       {/* Action Buttons */}
                       <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
-                        {review.status !== 'approved' && (
+                        <button 
+                          onClick={() => openPreview(review)}
+                          className="flex items-center justify-center p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white border border-blue-200 hover:border-blue-500 rounded-xl transition-colors"
+                          title="Lihat Detail & Balas"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        
+                        {review.status !== 'approved' ? (
                           <button 
                             onClick={() => handleUpdateStatus(review.id, 'approved')}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white border border-emerald-200 hover:border-emerald-500 rounded-xl text-sm font-bold transition-colors"
                           >
                             <CheckCircle2 className="w-4 h-4" /> Setujui
                           </button>
-                        )}
-                        
-                        {review.status === 'approved' && (
+                        ) : (
                           <button 
                             onClick={() => handleUpdateStatus(review.id, 'rejected')}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-700 hover:bg-amber-500 hover:text-white border border-amber-200 hover:border-amber-500 rounded-xl text-sm font-bold transition-colors"
@@ -441,91 +498,113 @@ export default function AdminReviewsPage() {
       {/* REVIEW PREVIEW MODAL */}
       <AnimatePresence>
         {selectedReview && (
-          <>
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-[#0b1728]/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-6"
+            onClick={() => setSelectedReview(null)}
+          >
             <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[#0b1728]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-6"
-              onClick={() => setSelectedReview(null)}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto hide-scrollbar shadow-2xl relative"
+              onClick={(e) => e.stopPropagation()}
             >
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="bg-white rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto hide-scrollbar shadow-2xl relative"
-                onClick={(e) => e.stopPropagation()}
+              <button 
+                onClick={() => setSelectedReview(null)}
+                className="absolute top-6 right-6 p-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition-colors z-20"
               >
-                <button 
-                  onClick={() => setSelectedReview(null)}
-                  className="absolute top-6 right-6 p-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition-colors z-20"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <X className="w-5 h-5" />
+              </button>
 
-                <div className="flex flex-col lg:flex-row">
-                  {/* Modal Left: Image if exists */}
-                  {selectedReview.image && (
-                    <div className="w-full lg:w-2/5 min-h-[300px] lg:min-h-[500px] bg-gray-900 relative">
-                      <img src={selectedReview.image} alt="Guest moment" className="w-full h-full object-contain absolute inset-0" />
-                    </div>
-                  )}
+              <div className="flex flex-col lg:flex-row">
+                {/* Modal Left: Image if exists */}
+                {selectedReview.image && (
+                  <div className="w-full lg:w-2/5 min-h-[300px] lg:min-h-[500px] bg-gray-900 relative">
+                    <img src={selectedReview.image} alt="Guest moment" className="w-full h-full object-contain absolute inset-0" />
+                  </div>
+                )}
 
-                  {/* Modal Right: Content */}
-                  <div className={`p-8 md:p-10 flex flex-col ${selectedReview.image ? 'w-full lg:w-3/5' : 'w-full'}`}>
-                    <div className={`inline-flex px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider items-center gap-1.5 w-max mb-6 ${
-                      selectedReview.status === 'pending' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                      selectedReview.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-50 text-gray-600 border border-gray-200'
-                    }`}>
-                      {selectedReview.status}
-                    </div>
+                {/* Modal Right: Content */}
+                <div className={`p-8 md:p-10 flex flex-col ${selectedReview.image ? 'w-full lg:w-3/5' : 'w-full'}`}>
+                  <div className={`inline-flex px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider items-center gap-1.5 w-max mb-6 ${
+                    selectedReview.status === 'pending' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                    selectedReview.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-50 text-gray-600 border border-gray-200'
+                  }`}>
+                    {selectedReview.status}
+                  </div>
 
-                    <h2 className="text-3xl font-bold text-[#11223a] mb-2">{selectedReview.name}</h2>
-                    <div className="flex items-center gap-4 text-gray-500 font-medium mb-6">
-                      <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-md"><MapPin className="w-4 h-4 text-[#B88E52]" /> {selectedReview.origin}</span>
-                      <span className="text-sm">{selectedReview.createdAt ? new Date(selectedReview.createdAt.seconds * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Baru saja'}</span>
-                    </div>
+                  <h2 className="text-3xl font-bold text-[#11223a] mb-2">{selectedReview.name}</h2>
+                  <div className="flex items-center gap-4 text-gray-500 font-medium mb-6">
+                    <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-md"><MapPin className="w-4 h-4 text-[#B88E52]" /> {selectedReview.origin}</span>
+                    <span className="text-sm">{selectedReview.createdAt ? new Date(selectedReview.createdAt.seconds * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Baru saja'}</span>
+                  </div>
 
-                    <div className="flex gap-1.5 mb-8 p-4 bg-[#fdfaf5] border border-[#B88E52]/20 rounded-2xl w-max">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`w-6 h-6 ${i < selectedReview.rating ? 'fill-[#B88E52] text-[#B88E52]' : 'fill-transparent text-gray-300'}`} />
-                      ))}
-                    </div>
+                  <div className="flex gap-1.5 mb-8 p-4 bg-[#fdfaf5] border border-[#B88E52]/20 rounded-2xl w-max">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-6 h-6 ${i < selectedReview.rating ? 'fill-[#B88E52] text-[#B88E52]' : 'fill-transparent text-gray-300'}`} />
+                    ))}
+                  </div>
 
-                    <div className="relative mb-10 flex-grow">
-                      <Quote className="absolute -top-4 -left-4 w-12 h-12 text-gray-100 rotate-180" />
-                      <p className="text-gray-700 text-lg leading-relaxed relative z-10 italic">
-                        "{selectedReview.text}"
-                      </p>
-                    </div>
+                  <div className="relative mb-8 flex-grow">
+                    <Quote className="absolute -top-4 -left-4 w-12 h-12 text-gray-100 rotate-180" />
+                    <p className="text-gray-700 text-lg leading-relaxed relative z-10 italic">
+                      "{selectedReview.text}"
+                    </p>
+                  </div>
 
-                    {/* Modal Actions */}
-                    <div className="flex items-center gap-3 pt-6 border-t border-gray-100 mt-auto">
-                      {selectedReview.status !== 'approved' && (
-                        <button 
-                          onClick={() => handleUpdateStatus(selectedReview.id, 'approved')}
-                          className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-500 text-white hover:bg-emerald-600 rounded-xl font-bold transition-all shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-0.5"
-                        >
-                          <CheckCircle2 className="w-5 h-5" /> Setujui & Tampilkan
-                        </button>
-                      )}
-                      {selectedReview.status === 'approved' && (
-                        <button 
-                          onClick={() => handleUpdateStatus(selectedReview.id, 'rejected')}
-                          className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-amber-500 text-white hover:bg-amber-600 rounded-xl font-bold transition-all shadow-lg hover:shadow-amber-500/30 hover:-translate-y-0.5"
-                        >
-                          <XCircle className="w-5 h-5" /> Sembunyikan dari Publik
-                        </button>
-                      )}
-                      <button 
-                        onClick={() => handleDelete(selectedReview.id)}
-                        className="px-6 py-3.5 bg-white text-red-500 hover:bg-red-50 border border-red-200 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                  {/* Admin Reply Section */}
+                  <div className="mt-4 pt-6 border-t border-gray-100">
+                    <label className="flex items-center gap-2 text-sm font-bold text-[#11223a] mb-3 uppercase tracking-wider">
+                      <MessageCircleReply className="w-4 h-4 text-[#B88E52]" /> Balasan PMM Voyage
+                    </label>
+                    <textarea
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      placeholder="Tulis balasan untuk ulasan tamu ini..."
+                      className="w-full p-4 rounded-xl border border-gray-200 focus:outline-none focus:border-[#B88E52] focus:ring-1 focus:ring-[#B88E52] min-h-[100px] text-gray-700 text-sm leading-relaxed resize-none bg-gray-50"
+                    />
+                    <div className="flex justify-end mt-3 mb-6">
+                      <button
+                        onClick={handleSendReply}
+                        disabled={isReplying || !replyText.trim()}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#11223a] hover:bg-[#0b1728] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold text-sm transition-all shadow-md"
                       >
-                        <Trash2 className="w-5 h-5" /> Hapus
+                        {isReplying ? 'Menyimpan...' : (
+                          <>Simpan Balasan <Send className="w-4 h-4" /></>
+                        )}
                       </button>
                     </div>
-
                   </div>
+
+                  {/* Modal Actions */}
+                  <div className="flex items-center gap-3 pt-6 border-t border-gray-100 mt-auto">
+                    {selectedReview.status !== 'approved' && (
+                      <button 
+                        onClick={() => handleUpdateStatus(selectedReview.id, 'approved')}
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-500 text-white hover:bg-emerald-600 rounded-xl font-bold transition-all shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-0.5"
+                      >
+                        <CheckCircle2 className="w-5 h-5" /> Setujui & Tampilkan
+                      </button>
+                    )}
+                    {selectedReview.status === 'approved' && (
+                      <button 
+                        onClick={() => handleUpdateStatus(selectedReview.id, 'rejected')}
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-amber-500 text-white hover:bg-amber-600 rounded-xl font-bold transition-all shadow-lg hover:shadow-amber-500/30 hover:-translate-y-0.5"
+                      >
+                        <XCircle className="w-5 h-5" /> Sembunyikan dari Publik
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => handleDelete(selectedReview.id)}
+                      className="px-6 py-3.5 bg-white text-red-500 hover:bg-red-50 border border-red-200 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Trash2 className="w-5 h-5" /> Hapus
+                    </button>
+                  </div>
+
                 </div>
-              </motion.div>
+              </div>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
 
