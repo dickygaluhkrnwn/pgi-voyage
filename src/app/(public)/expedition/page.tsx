@@ -54,7 +54,7 @@ const imgPadar = "https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q
 const imgWhaleShark = "https://images.unsplash.com/photo-1580580297368-c782fb65d271?q=80&w=1974&auto=format&fit=crop";
 const imgKomodo = "https://images.unsplash.com/photo-1717238977683-5f06a9e60694?q=80&w=1970&auto=format&fit=crop";
 const imgPinkBeach = "https://images.unsplash.com/photo-1724127722795-96efb9caffbc?q=80&w=1929&auto=format&fit=crop";
-const imgVessel = "/images/Kapal_Pulau_Mas_88.png";
+const imgVessel = "https://res.cloudinary.com/danyx7uny/image/upload/v1781582217/obuwude82h22wr1wvscz.png"; // Updated Vessel
 
 // --- ORIGINAL PREMIUM FALLBACK DATA ---
 const defaultExpeditionData = {
@@ -258,7 +258,6 @@ export default function ExpeditionPage() {
         if (docSnap.exists()) {
           const data = docSnap.data();
           
-          // Ultra-secure fallbacks to prevent rendering failures when admin inputs are partial
           const mergedHighlights = data.highlights && Array.isArray(data.highlights) && data.highlights.length > 0
             ? data.highlights.map((h: any, i: number) => ({
                 ...defaultExpeditionData.highlights[i % defaultExpeditionData.highlights.length],
@@ -317,12 +316,11 @@ export default function ExpeditionPage() {
             faqs: mergedFaqs,
           });
         } else {
-          // No doc found, load premium defaults safely
           setExpData(defaultExpeditionData);
         }
       } catch (error) {
         console.error("Error fetching expedition settings:", error);
-        setExpData(defaultExpeditionData); // Clean fallback on database failure
+        setExpData(defaultExpeditionData); 
       } finally {
         setIsLoading(false);
       }
@@ -346,40 +344,99 @@ export default function ExpeditionPage() {
   return (
     <main className="flex flex-col w-full bg-[#f8f9fa] overflow-x-hidden">
       
-      {/* 1. HERO SECTION */}
-      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-6 lg:px-12 bg-[#11223a] overflow-hidden flex flex-col items-center justify-center min-h-screen">
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-[20s] hover:scale-105" 
-          style={{ backgroundImage: `url('${imgPadar}')` }}
-        ></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#11223a]/90 via-[#11223a]/40 to-[#11223a]"></div>
+      {/* 1. HERO SECTION (EDITORIAL PILL COLLAGE) */}
+      <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 px-6 lg:px-12 bg-[#11223a] overflow-hidden flex items-center min-h-[75vh] lg:min-h-[90vh]">
+        {/* Background Subtle Map/Glow */}
+        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-[#B88E52]/10 rounded-full blur-[150px] pointer-events-none"></div>
+        <div className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none"></div>
         
-        <motion.div 
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="relative z-10 max-w-5xl mx-auto text-center mt-12"
-        >
-          <motion.span variants={fadeInUp} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-[#B88E52]/60 text-[#B88E52] text-sm font-semibold mb-6 backdrop-blur-md shadow-lg uppercase tracking-widest">
-            <Map className="w-4 h-4" /> The Grand Route
-          </motion.span>
-          <motion.h1 variants={fadeInUp} className="text-5xl md:text-7xl lg:text-8xl font-bold text-white tracking-tight mb-6 leading-[1.1] drop-shadow-2xl">
-            4D3N Ultimate <br /> <span className="italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-[#B88E52] to-[#eaddbd]">Sea Expedition</span>
-          </motion.h1>
-          <motion.p variants={fadeInUp} className="text-lg lg:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed font-light drop-shadow-md">
-            Experience an unforgettable sailing journey from Lombok to Labuan Bajo. Encounter whale sharks, trek with dragons, and discover breathtaking island panoramas.
-          </motion.p>
-        </motion.div>
+        <div className="max-w-7xl mx-auto w-full relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
+          
+          {/* Left Side: Text */}
+          <motion.div 
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="w-full lg:w-1/2 text-center lg:text-left pt-12 lg:pt-0"
+          >
+            <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-[#B88E52] text-xs font-bold mb-6 backdrop-blur-md shadow-sm uppercase tracking-widest">
+              <Navigation className="h-4 w-4" /> The Grand Route
+            </motion.div>
+            
+            <motion.h1 variants={fadeInUp} className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight leading-[1.1]">
+              4D3N Ultimate <br /> 
+              <span className="italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-[#B88E52] to-[#eaddbd]">Sea Expedition</span>
+            </motion.h1>
+            
+            <motion.p variants={fadeInUp} className="text-lg md:text-xl text-white/70 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light mb-10">
+              Experience an unforgettable sailing journey from Lombok to Labuan Bajo. Encounter whale sharks, trek with dragons, and discover breathtaking island panoramas.
+            </motion.p>
 
-        {/* Scroll Indicator */}
-        <motion.div 
-          animate={{ y: [0, 10, 0] }} 
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="absolute bottom-10 left-1/2 transform -translate-x-1/2 text-white/50 flex flex-col items-center"
-        >
-          <span className="text-xs uppercase tracking-widest mb-2">Scroll to Explore</span>
-          <div className="w-px h-12 bg-gradient-to-b from-[#B88E52] to-transparent"></div>
-        </motion.div>
+            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+              <a 
+                href={b2cWaLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-8 py-4 rounded-full bg-[#B88E52] hover:bg-[#a37c46] text-white font-bold text-lg transition-all shadow-[0_4px_20px_rgba(184,142,82,0.3)] hover:-translate-y-1 flex items-center justify-center gap-2 w-full sm:w-auto"
+              >
+                Book This Voyage <ArrowRight className="w-5 h-5" />
+              </a>
+              <button 
+                onClick={() => window.scrollTo({ top: window.innerHeight * 0.8, behavior: 'smooth' })}
+                className="px-8 py-4 rounded-full bg-transparent hover:bg-white/5 border border-white/20 text-white font-bold text-lg transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
+              >
+                View Itinerary
+              </button>
+            </motion.div>
+          </motion.div>
+
+          {/* Right Side: Pill Image Collage */}
+          <motion.div 
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 1, delay: 0.3 }}
+            className="w-full lg:w-1/2 relative h-[450px] sm:h-[550px] lg:h-[650px] flex justify-center lg:justify-end items-center gap-4 sm:gap-6 pointer-events-none"
+          >
+            {/* Left Pill (Smaller, shifts down) */}
+            <motion.div 
+              animate={{ y: [20, 0, 20] }}
+              transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+              className="w-40 sm:w-48 lg:w-56 h-[60%] sm:h-[70%] rounded-full overflow-hidden shadow-2xl relative border-4 border-[#11223a] z-20 mt-20"
+            >
+              <img src={imgWhaleShark} className="w-full h-full object-cover" alt="Whale Shark" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/80 to-transparent"></div>
+              <div className="absolute bottom-6 left-0 right-0 text-center">
+                <span className="text-white font-bold text-sm tracking-wider">Saleh Bay</span>
+              </div>
+            </motion.div>
+
+            {/* Right Pill (Taller, shifts up) */}
+            <motion.div 
+              animate={{ y: [-20, 0, -20] }}
+              transition={{ repeat: Infinity, duration: 7, ease: "easeInOut", delay: 1 }}
+              className="w-48 sm:w-56 lg:w-64 h-[80%] sm:h-[90%] rounded-full overflow-hidden shadow-2xl relative border-4 border-[#11223a] z-10 mb-20"
+            >
+              <img src={imgPadar} className="w-full h-full object-cover" alt="Padar Island" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#11223a]/80 to-transparent"></div>
+              <div className="absolute bottom-8 left-0 right-0 text-center">
+                <span className="text-[#B88E52] text-[10px] font-bold uppercase tracking-widest mb-1 block">Iconic Destination</span>
+                <span className="text-white font-bold text-lg tracking-wider">Padar Island</span>
+              </div>
+            </motion.div>
+
+            {/* Floating Badge */}
+            <motion.div 
+              animate={{ scale: [1, 1.05, 1], rotate: [0, 5, 0] }}
+              transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
+              className="absolute top-[15%] right-[10%] lg:right-[40%] w-24 h-24 bg-white/10 backdrop-blur-md rounded-full border border-white/20 flex flex-col items-center justify-center text-white shadow-xl z-30"
+            >
+              <Map className="w-6 h-6 text-[#B88E52] mb-1" />
+              <span className="text-[10px] font-bold tracking-widest uppercase">4 Days</span>
+            </motion.div>
+
+          </motion.div>
+
+        </div>
       </section>
 
       {/* 2. TRIP HIGHLIGHTS (Bento Grid) */}
