@@ -897,57 +897,70 @@ export default function PublicHomepage() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row shadow-2xl relative"
+              className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col md:flex-row shadow-2xl relative"
             >
               <button 
                 onClick={() => setSelectedReview(null)} 
-                className="absolute top-4 right-4 z-20 w-10 h-10 bg-white/50 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-gray-100 text-gray-800 transition-colors shadow-sm border border-gray-200"
+                className="absolute top-4 right-4 z-30 w-10 h-10 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-gray-100 text-[#11223a] transition-colors shadow-sm border border-gray-200"
               >
                 <X className="w-5 h-5" />
               </button>
 
               {/* Kiri: Foto Momen (Hanya jika ada) */}
               {selectedReview.image && (
-                <div className="w-full md:w-2/5 h-64 md:h-auto shrink-0 bg-gray-100 relative">
+                <div className="w-full h-56 md:h-auto md:w-2/5 shrink-0 bg-gray-100 relative">
                   <img src={selectedReview.image} alt="Guest Moment" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent md:hidden pointer-events-none"></div>
                 </div>
               )}
 
               {/* Kanan: Teks Ulasan & Balasan Admin */}
-              <div className={`p-8 md:p-12 flex flex-col overflow-y-auto custom-scrollbar ${selectedReview.image ? 'md:w-3/5' : 'w-full'}`}>
-                <div className="flex gap-1 text-[#B88E52] mb-6">
-                  {[...Array(5)].map((_, i) => <Star key={i} className={`w-5 h-5 ${i < (selectedReview.rating || 5) ? 'fill-[#B88E52] text-[#B88E52]' : 'fill-transparent text-gray-300'}`} />)}
+              <div className={`p-6 sm:p-8 md:p-10 flex flex-col overflow-y-auto custom-scrollbar ${selectedReview.image ? 'md:w-3/5' : 'w-full'}`}>
+                
+                {/* Header Profil Reviewer (Pindah ke atas) */}
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 shrink-0 rounded-full bg-[#fdfaf5] border border-[#B88E52]/30 shadow-sm flex items-center justify-center text-2xl font-bold text-[#B88E52]">
+                    {selectedReview.name?.charAt(0).toUpperCase() || "G"}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#11223a] text-lg leading-tight">{selectedReview.name}</h4>
+                    <div className="flex items-center gap-2 text-xs text-gray-500 uppercase tracking-wider font-semibold mt-1">
+                      <span>{selectedReview.origin}</span>
+                    </div>
+                    <div className="flex gap-1 mt-1.5">
+                      {[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < (selectedReview.rating || 5) ? 'fill-[#B88E52] text-[#B88E52]' : 'fill-transparent text-gray-300'}`} />)}
+                    </div>
+                  </div>
                 </div>
                 
-                <h3 className="text-2xl font-bold text-[#11223a] mb-6">"An Unforgettable Journey"</h3>
-                
-                <p className="text-gray-700 text-lg leading-relaxed italic font-light mb-10 whitespace-pre-wrap">
-                  "{selectedReview.text}"
-                </p>
+                {/* Teks Ulasan */}
+                <div className="relative mb-8">
+                  <Quote className="absolute -top-3 -left-3 w-10 h-10 text-[#B88E52]/10 rotate-180 pointer-events-none" />
+                  <p className="text-gray-700 text-base md:text-lg leading-relaxed italic font-light relative z-10 whitespace-pre-wrap">
+                    "{selectedReview.text}"
+                  </p>
+                </div>
 
                 {/* ===== BALASAN DARI PMM VOYAGE ===== */}
                 {selectedReview.reply && (
-                  <div className="mb-10 bg-gray-50 border-l-4 border-[#B88E52] p-6 rounded-r-2xl relative shadow-sm">
-                    <div className="flex items-center gap-2 mb-2">
-                      <ShieldCheck className="w-5 h-5 text-[#B88E52]" />
-                      <span className="font-bold text-[#11223a] text-sm uppercase tracking-wider">PMM Voyage Team</span>
+                  <div className="mt-auto bg-[#f8f9fa] border border-gray-100 p-5 sm:p-6 rounded-2xl relative shadow-inner">
+                    <div className="absolute -left-px top-6 bottom-6 w-1 bg-[#B88E52] rounded-r-full"></div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 rounded-full bg-[#11223a] flex items-center justify-center shadow-sm shrink-0">
+                         <Ship className="w-4 h-4 text-[#B88E52]" />
+                      </div>
+                      <div>
+                         <span className="block font-bold text-[#11223a] text-sm tracking-wide">PMM Voyage Team</span>
+                         <span className="block text-[10px] text-gray-400 uppercase tracking-wider">Official Reply</span>
+                      </div>
                     </div>
-                    <p className="text-gray-600 text-base leading-relaxed whitespace-pre-wrap">
+                    <p className="text-gray-600 text-sm md:text-base leading-relaxed whitespace-pre-wrap pl-11">
                       {selectedReview.reply}
                     </p>
                   </div>
                 )}
                 {/* =================================== */}
 
-                <div className="flex items-center gap-4 mt-auto pt-6 border-t border-gray-100">
-                  <div className="w-14 h-14 shrink-0 rounded-full bg-[#fdfaf5] border border-[#B88E52]/20 shadow-sm flex items-center justify-center text-2xl font-bold text-[#B88E52]">
-                    {selectedReview.name?.charAt(0).toUpperCase() || "G"}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-[#11223a] text-lg">{selectedReview.name}</h4>
-                    <span className="text-sm text-gray-500 uppercase tracking-wider font-semibold">{selectedReview.origin}</span>
-                  </div>
-                </div>
               </div>
             </motion.div>
           </motion.div>
