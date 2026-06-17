@@ -13,9 +13,13 @@ import {
   ShieldCheck,
   TrendingUp,
   Globe,
-  Loader2
+  Loader2,
+  MessageSquareQuote,
+  Star,
+  AlertCircle,
+  CheckCircle2
 } from 'lucide-react';
-import { collection, getCountFromServer } from 'firebase/firestore';
+import { collection, getCountFromServer, query, where } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '@/lib/firebase';
 import Link from 'next/link';
@@ -38,14 +42,13 @@ const staggerContainer: Variants = {
   }
 };
 
-const hoverScale = {
-  rest: { scale: 1 },
-  hover: { scale: 1.02, transition: { duration: 0.2, ease: "easeInOut" } }
-};
-
 export default function AdminDashboardPage() {
-  const [blogCount, setBlogCount] = useState<number | string>('-');
-  const [galleryCount, setGalleryCount] = useState<number | string>('-');
+  const [stats, setStats] = useState({
+    blogs: 0,
+    gallery: 0,
+    reviewsTotal: 0,
+    reviewsPending: 0
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
@@ -56,25 +59,28 @@ export default function AdminDashboardPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch Data Stats
+  // Fetch Data Stats (Parallel Query for Performance)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         const fetchDashboardStats = async () => {
           setIsLoading(true);
-          
           try {
-            // 1. Fetch Blog Count
-            const blogSnap = await getCountFromServer(collection(db, 'blogs'));
-            setBlogCount(blogSnap.data().count);
+            const [blogSnap, gallerySnap, reviewSnap, pendingReviewSnap] = await Promise.all([
+              getCountFromServer(collection(db, 'blogs')),
+              getCountFromServer(collection(db, 'galleries')),
+              getCountFromServer(collection(db, 'reviews')),
+              getCountFromServer(query(collection(db, 'reviews'), where('status', '==', 'pending')))
+            ]);
 
-            // 2. Fetch Gallery Count (Collection: 'galleries')
-            const gallerySnap = await getCountFromServer(collection(db, 'galleries'));
-            setGalleryCount(gallerySnap.data().count);
+            setStats({
+              blogs: blogSnap.data().count,
+              gallery: gallerySnap.data().count,
+              reviewsTotal: reviewSnap.data().count,
+              reviewsPending: pendingReviewSnap.data().count
+            });
           } catch (error) {
             console.error("Error fetching stats:", error);
-            setBlogCount(0);
-            setGalleryCount(0);
           } finally {
             setIsLoading(false);
           }
@@ -89,34 +95,12 @@ export default function AdminDashboardPage() {
     return () => unsubscribe();
   }, []);
 
-  // Data Statistik Utama
-  const stats = [
-    { 
-      title: 'Published Articles', 
-      value: blogCount, 
-      icon: <FileText className="w-7 h-7 text-white" />, 
-      bgIcon: 'bg-gradient-to-br from-blue-500 to-indigo-600', 
-      bgCard: 'bg-white',
-      link: '/admin/blog',
-      trend: '+12% this month'
-    },
-    { 
-      title: 'Gallery Assets', 
-      value: galleryCount, 
-      icon: <ImageIcon className="w-7 h-7 text-white" />, 
-      bgIcon: 'bg-gradient-to-br from-emerald-400 to-teal-500', 
-      bgCard: 'bg-white',
-      link: '/admin/gallery',
-      trend: '+5 new assets'
-    }
-  ];
-
   return (
     <motion.div 
       initial="hidden"
       animate="visible"
       variants={staggerContainer}
-      className="space-y-10 max-w-[1400px] mx-auto pb-20"
+      className="space-y-8 max-w-[1400px] mx-auto pb-20"
     >
       {/* 1. Header Section */}
       <motion.div variants={fadeInUp} className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white/50 p-6 rounded-[2rem] backdrop-blur-xl border border-gray-100 shadow-sm">
@@ -147,56 +131,109 @@ export default function AdminDashboardPage() {
         </div>
       </motion.div>
 
-      {/* 2. Key Metrics (Stats) */}
-      <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {stats.map((stat, index) => (
-          <Link href={stat.link} key={index}>
-            <motion.div
-              variants={fadeInUp}
-              whileHover="hover"
-              initial="rest"
-              animate="rest"
-              className={`block p-8 rounded-[2rem] ${stat.bgCard} border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] cursor-pointer relative overflow-hidden group`}
-            >
-              {/* Decorative Background Blob */}
-              <div className="absolute -right-10 -top-10 w-40 h-40 bg-gray-50 rounded-full blur-3xl opacity-50 group-hover:bg-[#B88E52]/10 transition-colors duration-500 pointer-events-none"></div>
-
-              <div className="flex items-start justify-between mb-6 relative z-10">
-                <div className={`w-16 h-16 rounded-2xl ${stat.bgIcon} flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform duration-300`}>
-                  {stat.icon}
+      {/* 2. Key Metrics (Bento Stats) */}
+      <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        {/* Metric 1: Reviews (Priority) */}
+        <Link href="/admin/reviews" className="block">
+          <motion.div variants={fadeInUp} className="p-8 rounded-[2rem] bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] cursor-pointer relative overflow-hidden group h-full flex flex-col justify-between hover:-translate-y-1 transition-transform">
+            <div className="absolute -right-10 -top-10 w-40 h-40 bg-amber-50 rounded-full blur-3xl opacity-50 group-hover:bg-amber-100 transition-colors duration-500 pointer-events-none"></div>
+            
+            <div className="flex items-start justify-between mb-6 relative z-10">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform duration-300">
+                <MessageSquareQuote className="w-7 h-7 text-white" />
+              </div>
+              {stats.reviewsPending > 0 ? (
+                <div className="flex items-center gap-1.5 text-xs font-bold text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 animate-pulse">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {stats.reviewsPending} Pending
                 </div>
+              ) : (
                 <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  {stat.trend}
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  All Moderated
                 </div>
+              )}
+            </div>
+            
+            <div className="relative z-10">
+              <p className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Guest Reviews</p>
+              <div className="flex items-end gap-4 justify-between">
+                <h3 className="text-5xl font-black text-[#11223a] leading-none">
+                  {isLoading ? <Loader2 className="w-8 h-8 animate-spin text-[#B88E52]" /> : stats.reviewsTotal}
+                </h3>
+                <span className="text-gray-400 font-medium pb-1 flex items-center gap-1 group-hover:text-[#B88E52] transition-colors duration-300">
+                  Moderate <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </span>
               </div>
-              
-              <div className="relative z-10">
-                <p className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">{stat.title}</p>
-                <div className="flex items-end gap-4">
-                  <h3 className="text-5xl font-black text-[#11223a] leading-none">
-                    {isLoading ? (
-                      <Loader2 className="w-10 h-10 animate-spin text-[#B88E52]" />
-                    ) : (
-                      stat.value
-                    )}
-                  </h3>
-                  {!isLoading && (
-                    <span className="text-gray-400 font-medium pb-1 flex items-center gap-1 group-hover:text-[#B88E52] transition-colors duration-300">
-                      View details <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </span>
-                  )}
-                </div>
+            </div>
+          </motion.div>
+        </Link>
+
+        {/* Metric 2: Blog */}
+        <Link href="/admin/blog" className="block">
+          <motion.div variants={fadeInUp} className="p-8 rounded-[2rem] bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] cursor-pointer relative overflow-hidden group h-full flex flex-col justify-between hover:-translate-y-1 transition-transform">
+            <div className="absolute -right-10 -top-10 w-40 h-40 bg-blue-50 rounded-full blur-3xl opacity-50 group-hover:bg-blue-100 transition-colors duration-500 pointer-events-none"></div>
+            
+            <div className="flex items-start justify-between mb-6 relative z-10">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform duration-300">
+                <FileText className="w-7 h-7 text-white" />
               </div>
-            </motion.div>
-          </Link>
-        ))}
+              <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
+                <TrendingUp className="w-3.5 h-3.5" />
+                Active SEO
+              </div>
+            </div>
+            
+            <div className="relative z-10">
+              <p className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Published Articles</p>
+              <div className="flex items-end gap-4 justify-between">
+                <h3 className="text-5xl font-black text-[#11223a] leading-none">
+                  {isLoading ? <Loader2 className="w-8 h-8 animate-spin text-[#B88E52]" /> : stats.blogs}
+                </h3>
+                <span className="text-gray-400 font-medium pb-1 flex items-center gap-1 group-hover:text-[#B88E52] transition-colors duration-300">
+                  Manage <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        </Link>
+
+        {/* Metric 3: Gallery */}
+        <Link href="/admin/gallery" className="block">
+          <motion.div variants={fadeInUp} className="p-8 rounded-[2rem] bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] cursor-pointer relative overflow-hidden group h-full flex flex-col justify-between hover:-translate-y-1 transition-transform">
+            <div className="absolute -right-10 -top-10 w-40 h-40 bg-emerald-50 rounded-full blur-3xl opacity-50 group-hover:bg-emerald-100 transition-colors duration-500 pointer-events-none"></div>
+            
+            <div className="flex items-start justify-between mb-6 relative z-10">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform duration-300">
+                <ImageIcon className="w-7 h-7 text-white" />
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
+                <TrendingUp className="w-3.5 h-3.5" />
+                Growing
+              </div>
+            </div>
+            
+            <div className="relative z-10">
+              <p className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Gallery Assets</p>
+              <div className="flex items-end gap-4 justify-between">
+                <h3 className="text-5xl font-black text-[#11223a] leading-none">
+                  {isLoading ? <Loader2 className="w-8 h-8 animate-spin text-[#B88E52]" /> : stats.gallery}
+                </h3>
+                <span className="text-gray-400 font-medium pb-1 flex items-center gap-1 group-hover:text-[#B88E52] transition-colors duration-300">
+                  Manage <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        </Link>
+
       </motion.div>
 
       {/* 3. Main Dashboard Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* KIRI: Quick Actions & Live Manager */}
+        {/* KIRI: Banner & Quick Actions */}
         <motion.div variants={fadeInUp} className="lg:col-span-2 space-y-8">
           
           {/* Live Web Manager Banner (PREMIUM CARD) */}
@@ -213,12 +250,12 @@ export default function AdminDashboardPage() {
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/10 text-white px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest mb-6 shadow-inner">
                 <Globe className="w-4 h-4 text-[#B88E52]" /> B2C Portal Active
               </div>
-              <h2 className="text-3xl font-black mb-4 tracking-tight">PGI Voyage Live Manager</h2>
+              <h2 className="text-3xl font-black mb-4 tracking-tight">PMM Voyage Live Manager</h2>
               <p className="text-gray-300 text-base mb-8 max-w-lg leading-relaxed font-medium">
-                Sistem terpusat untuk mengelola konten <span className="text-[#B88E52] font-bold">peacefulgoldenisland.com</span>. Pastikan artikel memiliki keyword SEO yang relevan dan unggah foto ekspedisi dengan kualitas terbaik untuk menarik turis B2C.
+                Sistem terpusat untuk mengelola konten <span className="text-[#B88E52] font-bold">pulaumasmulia.com</span>. Pastikan Anda selalu mengecek ulasan terbaru untuk membangun kredibilitas perusahaan.
               </p>
               
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <a href="/" target="_blank" className="bg-[#B88E52] hover:bg-[#a07b46] text-white px-8 py-3.5 rounded-2xl font-bold transition-all shadow-lg hover:shadow-[#B88E52]/20 flex items-center gap-2 hover:-translate-y-0.5">
                   <Globe className="w-5 h-5" /> Kunjungi Website
                 </a>
@@ -232,23 +269,36 @@ export default function AdminDashboardPage() {
               <Activity className="w-5 h-5 text-[#B88E52]" /> Quick Actions
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <Link href="/admin/reviews" className="group flex items-start gap-5 p-5 rounded-3xl border border-gray-100 hover:border-[#B88E52]/30 hover:bg-gradient-to-br from-white to-[#fdfaf5] transition-all duration-300 hover:shadow-md cursor-pointer">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50/80 text-amber-600 flex items-center justify-center shrink-0 group-hover:bg-[#B88E52] group-hover:text-white transition-colors duration-300 shadow-sm relative">
+                  <Star className="w-6 h-6" />
+                  {stats.reviewsPending > 0 && (
+                     <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 border-2 border-white rounded-full"></span>
+                  )}
+                </div>
+                <div>
+                  <h4 className="font-bold text-[#11223a] text-lg group-hover:text-[#B88E52] transition-colors">Moderasi Review</h4>
+                  <p className="text-sm text-gray-500 mt-1.5 leading-relaxed font-medium">Setujui ulasan masuk dan berikan balasan resmi.</p>
+                </div>
+              </Link>
+
               <Link href="/admin/blog/create" className="group flex items-start gap-5 p-5 rounded-3xl border border-gray-100 hover:border-[#B88E52]/30 hover:bg-gradient-to-br from-white to-[#fdfaf5] transition-all duration-300 hover:shadow-md cursor-pointer">
                 <div className="w-12 h-12 rounded-2xl bg-blue-50/80 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-[#B88E52] group-hover:text-white transition-colors duration-300 shadow-sm">
                   <PlusCircle className="w-6 h-6" />
                 </div>
                 <div>
                   <h4 className="font-bold text-[#11223a] text-lg group-hover:text-[#B88E52] transition-colors">Tulis Artikel Baru</h4>
-                  <p className="text-sm text-gray-500 mt-1.5 leading-relaxed font-medium">Publikasikan jurnal perjalanan atau panduan SEO terbaru.</p>
+                  <p className="text-sm text-gray-500 mt-1.5 leading-relaxed font-medium">Publikasikan jurnal perjalanan untuk optimasi SEO.</p>
                 </div>
               </Link>
               
-              <Link href="/admin/gallery/create" className="group flex items-start gap-5 p-5 rounded-3xl border border-gray-100 hover:border-[#B88E52]/30 hover:bg-gradient-to-br from-white to-[#fdfaf5] transition-all duration-300 hover:shadow-md cursor-pointer">
+              <Link href="/admin/gallery/create" className="group flex items-start gap-5 p-5 rounded-3xl border border-gray-100 hover:border-[#B88E52]/30 hover:bg-gradient-to-br from-white to-[#fdfaf5] transition-all duration-300 hover:shadow-md cursor-pointer sm:col-span-2 md:col-span-1">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-50/80 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-[#B88E52] group-hover:text-white transition-colors duration-300 shadow-sm">
                   <ImageIcon className="w-6 h-6" />
                 </div>
                 <div>
                   <h4 className="font-bold text-[#11223a] text-lg group-hover:text-[#B88E52] transition-colors">Upload Galeri</h4>
-                  <p className="text-sm text-gray-500 mt-1.5 leading-relaxed font-medium">Tambahkan foto/reel ekspedisi kapal ke portofolio utama.</p>
+                  <p className="text-sm text-gray-500 mt-1.5 leading-relaxed font-medium">Tambahkan foto/reel ekspedisi ke portofolio utama.</p>
                 </div>
               </Link>
             </div>
