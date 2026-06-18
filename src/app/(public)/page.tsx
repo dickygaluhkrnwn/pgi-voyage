@@ -256,7 +256,7 @@ export default function PublicHomepage() {
   // Component Reusable untuk Gambar Kapal agar kode tetap DRY
   const VesselImageCard = () => (
     <div className="relative rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl shadow-gray-200 border border-gray-100 group cursor-pointer aspect-square sm:aspect-[4/5] lg:aspect-[4/5] w-full">
-      <img src="/images/Kapal_Pulau_Mas_88.png" alt="KM Pulau Mas 88" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+      <img src="https://res.cloudinary.com/danyx7uny/image/upload/v1781582217/obuwude82h22wr1wvscz.png" alt="Pulau Mas 88" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
       <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/20 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-500"></div>
       <div className="absolute bottom-6 left-6 right-6 md:bottom-8 md:left-8 md:right-8 text-white">
          <div className="inline-block bg-[#B88E52] text-white px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold shadow-lg uppercase tracking-wider mb-2 md:mb-3">
