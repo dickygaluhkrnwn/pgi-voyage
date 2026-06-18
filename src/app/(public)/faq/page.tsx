@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import { LifeBuoy, Wallet, Anchor, ChevronDown, Mail } from "lucide-react";
+import { LifeBuoy, Wallet, Anchor, ChevronDown, Mail, ArrowRight, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
 const fadeInUp: Variants = {
@@ -9,7 +9,7 @@ const fadeInUp: Variants = {
   visible: { 
     opacity: 1, 
     y: 0, 
-    transition: { duration: 0.8, ease: [0.25, 0.1, 0.25, 1] } 
+    transition: { duration: 0.8, ease: [0.21, 0.47, 0.32, 0.98] } 
   }
 };
 
@@ -17,14 +17,14 @@ const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 }
+    transition: { staggerChildren: 0.12, delayChildren: 0.1 }
   }
 };
 
 const faqData = [
   {
     category: "General Information",
-    icon: <Anchor className="w-6 h-6 text-[#B88E52]" />,
+    icon: <Anchor className="w-6 h-6 md:w-8 md:h-8 text-[#B88E52]" />,
     desc: "Essential details to know before embarking on your liveaboard journey.",
     questions: [
       {
@@ -55,7 +55,7 @@ const faqData = [
   },
   {
     category: "The Vessel & Facilities",
-    icon: <LifeBuoy className="w-6 h-6 text-[#B88E52]" />,
+    icon: <LifeBuoy className="w-6 h-6 md:w-8 md:h-8 text-[#B88E52]" />,
     desc: "Details regarding your comfort, safety, and amenities onboard.",
     questions: [
       {
@@ -90,7 +90,7 @@ const faqData = [
   },
   {
     category: "Pricing & Reservations",
-    icon: <Wallet className="w-6 h-6 text-[#B88E52]" />,
+    icon: <Wallet className="w-6 h-6 md:w-8 md:h-8 text-[#B88E52]" />,
     desc: "Information regarding costs, deposits, and booking procedures.",
     questions: [
       {
@@ -129,26 +129,28 @@ function FaqItem({ question, answer }: { question: string, answer: string }) {
   const [isOpen, setIsOpen] = useState(false);
   
   return (
-    <div className="border border-gray-100 rounded-2xl overflow-hidden bg-white shadow-sm hover:border-[#B88E52]/40 hover:shadow-md transition-all duration-300">
+    <div className={`border rounded-[1.25rem] md:rounded-[1.5rem] overflow-hidden bg-white transition-all duration-300 ${isOpen ? 'border-[#B88E52]/40 shadow-md' : 'border-gray-200 shadow-sm hover:border-gray-300'}`}>
       <button 
         onClick={() => setIsOpen(!isOpen)} 
-        className="w-full text-left px-6 py-5 flex items-center justify-between focus:outline-none bg-white"
+        className="w-full text-left px-5 py-4 md:px-6 md:py-5 flex items-center justify-between focus:outline-none bg-white group"
       >
-        <span className={`font-bold pr-4 transition-colors ${isOpen ? 'text-[#B88E52]' : 'text-[#11223a]'}`}>
+        <span className={`font-bold pr-4 text-sm md:text-base leading-snug transition-colors duration-300 ${isOpen ? 'text-[#B88E52]' : 'text-[#0f172a] group-hover:text-[#B88E52]'}`}>
           {question}
         </span>
-        <ChevronDown className={`w-5 h-5 text-[#B88E52] transition-transform duration-300 shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
+        <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300 ${isOpen ? 'bg-[#fdfaf5]' : 'bg-gray-50 group-hover:bg-[#fdfaf5]'}`}>
+          <ChevronDown className={`w-4 h-4 md:w-5 md:h-5 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#B88E52]' : 'text-gray-400 group-hover:text-[#B88E52]'}`} />
+        </div>
       </button>
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {isOpen && (
           <motion.div 
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="overflow-hidden bg-[#fdfaf5]"
+            transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+            className="overflow-hidden bg-white"
           >
-            <div className="px-6 pb-6 text-gray-600 leading-relaxed text-sm border-t border-gray-100 pt-4">
+            <div className="px-5 pb-5 md:px-6 md:pb-6 text-gray-600 leading-relaxed text-sm md:text-base border-t border-gray-100/0 pt-2">
               {answer}
             </div>
           </motion.div>
@@ -163,90 +165,104 @@ export default function FaqPage() {
   const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20PGI%20Voyage,%20I%20have%20a%20question%20about%20the%20sailing%20trip.`;
 
   return (
-    <main className="flex flex-col w-full bg-[#f8f9fa] min-h-screen">
+    <main className="flex flex-col w-full bg-[#f8f9fa] min-h-screen overflow-x-hidden">
       
-      {}
-      <section className="relative pt-32 pb-24 lg:pt-40 lg:pb-32 px-6 lg:px-12 bg-[#11223a] overflow-hidden flex flex-col items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#11223a] to-[#0b1728]"></div>
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#B88E52]/5 rounded-full blur-[100px] translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
+      {/* 1. HERO SECTION */}
+      <section className="relative pt-28 pb-20 md:pt-40 md:pb-32 lg:pt-48 lg:pb-40 px-5 md:px-12 bg-[#0f172a] overflow-hidden flex flex-col items-center justify-center">
+        {/* Background Image with Overlay */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20 mix-blend-luminosity scale-105" 
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?q=80&w=1920&auto=format&fit=crop')" }}
+        ></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a]/90 via-[#0f172a]/70 to-[#f8f9fa]"></div>
+        
+        {/* Subtle background decoration */}
+        <div className="absolute top-0 right-0 w-[400px] md:w-[600px] h-[400px] md:h-[600px] bg-[#B88E52]/10 rounded-full blur-[80px] md:blur-[100px] translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
         
         <motion.div 
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="relative z-10 max-w-3xl mx-auto text-center"
+          className="relative z-10 max-w-3xl mx-auto text-center mt-6 md:mt-0"
         >
-          <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[#B88E52] text-xs font-bold uppercase tracking-widest mb-6 backdrop-blur-md">
-            <LifeBuoy className="h-4 w-4" />
+          <motion.div variants={fadeInUp} className="inline-flex items-center gap-1.5 md:gap-2 px-4 py-1.5 md:px-5 md:py-2 rounded-full bg-white/5 border border-white/10 text-[#B88E52] text-[10px] md:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6 backdrop-blur-md shadow-sm">
+            <MessageSquare className="h-3.5 w-3.5 md:h-4 md:w-4" />
             Support Center
           </motion.div>
-          <motion.h1 variants={fadeInUp} className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 drop-shadow-md tracking-tight">
-            Frequently Asked <span className="italic font-serif text-[#B88E52] font-medium">Questions</span>
+          <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6 tracking-tight leading-[1.15] px-2">
+            Frequently Asked <br className="hidden sm:block" />
+            <span className="italic font-serif text-[#B88E52]">Questions</span>
           </motion.h1>
-          <motion.p variants={fadeInUp} className="text-base md:text-lg text-white/70 max-w-xl mx-auto leading-relaxed font-light">
+          <motion.p variants={fadeInUp} className="text-base md:text-lg lg:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed font-light px-4 md:px-0">
             Find answers regarding our expedition routes, boat amenities, reservation process, and travel preparations.
           </motion.p>
         </motion.div>
       </section>
 
-      {}
-      <section className="px-6 lg:px-12 mt-[-60px] relative z-20 pb-24">
-        <div className="max-w-4xl mx-auto space-y-16">
+      {/* 2. MAIN FAQ CONTENT (Two-Column Sticky Layout) */}
+      <section className="px-5 md:px-6 lg:px-12 relative z-20 pb-24 md:pb-32 -mt-6 md:-mt-10">
+        <div className="max-w-7xl mx-auto space-y-16 md:space-y-24">
           
           {faqData.map((section, idx) => (
             <motion.div 
               key={idx}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, margin: "-50px" }}
-              variants={fadeInUp}
-              className="bg-white rounded-[2rem] p-8 md:p-12 shadow-[0_20px_50px_rgba(17,34,58,0.05)] border border-gray-100"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={staggerContainer}
+              className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-start"
             >
-              <div className="flex items-start sm:items-center gap-4 mb-8 pb-8 border-b border-gray-100 flex-col sm:flex-row">
-                <div className="w-14 h-14 rounded-2xl bg-[#fdfaf5] border border-[#B88E52]/20 flex items-center justify-center shrink-0">
+              {/* Kiri: Kategori Info (Sticky on Desktop) */}
+              <motion.div variants={fadeInUp} className="w-full lg:w-1/3 lg:sticky lg:top-32 shrink-0">
+                <div className="w-14 h-14 md:w-16 md:h-16 rounded-[1rem] md:rounded-2xl bg-white border border-gray-200 shadow-sm flex items-center justify-center mb-5 md:mb-6">
                   {section.icon}
                 </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-[#11223a]">{section.category}</h2>
-                  <p className="text-sm text-gray-500 mt-1">{section.desc}</p>
-                </div>
-              </div>
+                <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-3">{section.category}</h2>
+                <p className="text-gray-600 text-sm md:text-base leading-relaxed pr-4">{section.desc}</p>
+              </motion.div>
 
-              <div className="space-y-4">
+              {/* Kanan: Daftar Pertanyaan */}
+              <motion.div variants={fadeInUp} className="w-full lg:w-2/3 space-y-3 md:space-y-4">
                 {section.questions.map((item, qIdx) => (
                   <FaqItem key={qIdx} question={item.q} answer={item.a} />
                 ))}
-              </div>
+              </motion.div>
             </motion.div>
           ))}
 
         </div>
       </section>
 
-      {}
-      <section className="py-20 px-6 lg:px-12 bg-white border-t border-gray-100 text-center">
+      {/* 3. FINAL CONTACT CTA */}
+      <section className="py-16 md:py-24 px-5 md:px-6 text-center bg-white border-t border-gray-100">
         <motion.div 
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
           variants={fadeInUp}
-          className="max-w-3xl mx-auto"
+          className="max-w-4xl mx-auto bg-[#0f172a] rounded-[2rem] md:rounded-[3rem] p-8 md:p-12 lg:p-16 shadow-2xl relative overflow-hidden"
         >
-          <div className="w-16 h-16 bg-[#fdfaf5] rounded-full flex items-center justify-center mx-auto mb-6 border border-[#B88E52]/20 shadow-sm">
-            <Mail className="w-8 h-8 text-[#B88E52]" />
-          </div>
-          <h2 className="text-3xl font-bold text-[#11223a] mb-4">Still have questions?</h2>
-          <p className="text-gray-600 mb-8 text-lg">
-            Our voyage specialists are ready to help you plan the perfect Komodo adventure. Send us a message and we'll get back to you shortly.
-          </p>
-          <a 
-            href={b2cWaLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-[#11223a] hover:bg-[#0f1f33] text-white font-bold transition-all shadow-lg hover:-translate-y-1"
-          >
-            Contact Support
-          </a>
+           {/* Decorative Blurs */}
+           <div className="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-[#B88E52]/20 rounded-full blur-3xl pointer-events-none"></div>
+           <div className="absolute bottom-0 left-0 w-32 h-32 md:w-48 md:h-48 bg-[#B88E52]/10 rounded-full blur-2xl pointer-events-none"></div>
+           
+           <div className="w-12 h-12 md:w-16 md:h-16 bg-[#B88E52] rounded-full flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-lg relative z-10">
+             <Mail className="w-6 h-6 md:w-8 md:h-8 text-white" />
+           </div>
+           
+           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 md:mb-6 relative z-10 leading-tight">Still have questions?</h2>
+           <p className="text-gray-300 mb-8 md:mb-10 text-sm md:text-lg relative z-10 max-w-xl mx-auto leading-relaxed font-light px-2 md:px-0">
+             Our voyage specialists are ready to help you plan the perfect Komodo adventure. Send us a message and we'll get back to you shortly.
+           </p>
+           
+           <a 
+              href={b2cWaLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 md:gap-3 px-8 py-4 md:px-10 md:py-5 rounded-full bg-white hover:bg-gray-100 text-[#0f172a] font-bold text-base md:text-lg transition-all shadow-xl hover:-translate-y-1 relative z-10 w-full sm:w-auto"
+            >
+              Contact Support <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
+            </a>
         </motion.div>
       </section>
 
