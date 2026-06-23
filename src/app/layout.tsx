@@ -5,7 +5,7 @@ import "./globals.css";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import MetaPixel from "@/components/MetaPixel";
 import GoogleTagManager from "@/components/GoogleTagManager";
-import { Analytics } from "@vercel/analytics/next"; // <-- 1. Impor Vercel Analytics di sini
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,11 +18,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://peacefulgoldenisland.com"), // <-- Update Domain Asli
-  title: "PMM Voyage | Premium Liveaboard", // <-- Update Nama Brand
+  metadataBase: new URL("https://peacefulgoldenisland.com"),
+  title: "PMM Voyage | Premium Liveaboard",
   description: "Experience the ultimate 4D3N liveaboard expedition from Lombok to Komodo. Book your premium cabin today.",
   verification: {
-    google: "ev8WW01OD9DIwuithkdSFT40usPCdfpGdAHcjbyogio", // <-- KODE VERIFIKASI GOOGLE GSC
+    google: "ev8WW01OD9DIwuithkdSFT40usPCdfpGdAHcjbyogio",
   },
   openGraph: {
     title: "PMM Voyage | Premium Komodo Liveaboard",
@@ -61,15 +61,16 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {/* Tracking Scripts (Google, Meta, & GTM) */}
         <Suspense fallback={null}>
-          <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID || "GTM-XXXXXXX"} />
-          <GoogleAnalytics GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GA_ID || "G-XXXXXXXXXX"} />
-          <MetaPixel PIXEL_ID={process.env.NEXT_PUBLIC_META_PIXEL_ID || "XXXXXXXXXXXXXXX"} />
+          {/* Fallback diubah langsung ke ID GTM asli agar langsung aktif untuk Google Ads */}
+          <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID || "GTM-T3JGT5ZL"} />
+          <GoogleAnalytics GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GA_ID || ""} />
+          <MetaPixel PIXEL_ID={process.env.NEXT_PUBLIC_META_PIXEL_ID || ""} />
         </Suspense>
         
         {/* Render Page Content */}
         {children}
 
-        {/* <-- 2. Render Vercel Analytics di paling bawah body */}
+        {/* Vercel Analytics */}
         <Analytics /> 
       </body>
     </html>
