@@ -304,7 +304,7 @@ export default function PublicHomepage() {
           
           <motion.p variants={fadeInUp} className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/80 mb-8 md:mb-12 max-w-2xl lg:max-w-3xl mx-auto leading-relaxed font-light drop-shadow-md px-4">
             An intimate journey from Lombok to Flores. 
-            Fixed departures every Saturday. Strictly limited to privileged guests.
+            Fixed departures every Monday. Strictly limited to privileged guests.
           </motion.p>
           
           <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4 w-full sm:w-auto">
