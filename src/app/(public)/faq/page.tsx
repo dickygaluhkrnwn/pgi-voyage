@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { LifeBuoy, Wallet, Anchor, ChevronDown, Mail, ArrowRight, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
+import { BRAND_NAME, CONTACT } from "@/lib/constants";
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 40 },
@@ -29,7 +30,7 @@ const faqData = [
     questions: [
       {
         q: "What does the expedition package cover?",
-        a: "Our standard packages typically include accommodation onboard, daily meals, drinking water, coffee/tea, snorkeling gear (mask and snorkel), an English-speaking guide, and designated land transfers. Please review your specific itinerary for complete inclusions."
+        a: "Our exclusive packages typically include premium accommodation onboard, chef-prepared daily meals, drinking water, coffee/tea, snorkeling gear (mask and snorkel), an English-speaking guide, and designated land transfers. Please review your specific itinerary for complete inclusions."
       },
       {
         q: "Where does the journey begin?",
@@ -41,15 +42,15 @@ const faqData = [
       },
       {
         q: "Is this trip family-friendly?",
-        a: "Yes, children are welcome onboard! However, for their safety, they must remain under constant parental or guardian supervision, particularly during water activities, trekking, and while moving around the decks."
+        a: "Yes, children are welcome onboard! However, for their safety, they must remain under strict parental or guardian supervision, particularly during water activities, trekking, and while moving around the decks."
       },
       {
         q: "Can non-swimmers participate?",
-        a: "Absolutely. While swimming enhances the experience, it is not mandatory. We provide life jackets for all guests, and our crew is always ready to assist you during water-based activities."
+        a: "Absolutely. While swimming enhances the experience, it is not mandatory. We provide life jackets for all guests, and our professional crew is always ready to assist you during water-based activities."
       },
       {
         q: "Are the itineraries fixed?",
-        a: "Sailing is deeply connected to nature. While we aim to follow the planned route, the captain holds the final authority to modify the itinerary based on weather, sea conditions, or harbor regulations to ensure everyone's safety."
+        a: "Sailing is deeply connected to nature. While we aim to follow the planned route, the captain holds the final authority to modify the itinerary based on weather, sea conditions, or harbor regulations to ensure everyone's supreme safety."
       }
     ]
   },
@@ -60,19 +61,19 @@ const faqData = [
     questions: [
       {
         q: "What amenities can I expect onboard?",
-        a: "Our vessels are equipped with standard liveaboard necessities: life-saving equipment, first-aid kits, shared bathrooms, a dining space, an open sun deck for relaxation, daily meals, and a dedicated service crew."
+        a: "Our vessels are equipped with premium liveaboard necessities: modern life-saving equipment, first-aid kits, well-maintained shared bathrooms, an elegant dining space, an open sun deck for relaxation, daily gourmet meals, and a dedicated service crew."
       },
       {
         q: "Are there proper bathrooms onboard?",
-        a: "Yes, our vessels feature shared toilet and shower facilities. Freshwater is available but must be used mindfully, as supply is carefully managed during the multi-day crossing."
+        a: "Yes, our vessels feature shared toilet and shower facilities. Freshwater is available but must be used mindfully, as supply is carefully managed during the multi-day sea crossing."
       },
       {
         q: "Do I need to bring my own snorkeling gear?",
-        a: "We provide basic snorkeling masks and tubes. However, if you prefer a customized fit or require specific fins, we highly recommend bringing your personal equipment."
+        a: "We provide high-quality basic snorkeling masks and tubes. However, if you prefer a customized fit or require specific fins, we highly recommend bringing your personal equipment."
       },
       {
         q: "How do you ensure passenger safety?",
-        a: "Safety is our absolute priority. Our boats comply with national maritime regulations and carry inflatable life rafts, life jackets, fire extinguishers, marine radios, and an experienced crew trained for emergencies."
+        a: "Safety is our absolute priority. Our boats comply strictly with national maritime regulations and carry inflatable life rafts, life jackets, fire extinguishers, marine radios, and an experienced crew extensively trained for emergencies."
       },
       {
         q: "Can I charge my devices onboard?",
@@ -80,11 +81,11 @@ const faqData = [
       },
       {
         q: "Will I have Wi-Fi access?",
-        a: "While some areas may have intermittent mobile signal, Wi-Fi is generally not provided or reliable. Consider this voyage a wonderful opportunity to disconnect and immerse yourself in nature."
+        a: "While some areas may have intermittent mobile signal, Wi-Fi is generally not provided or reliable. Consider this voyage a wonderful opportunity to disconnect and immerse yourself in the natural world."
       },
       {
         q: "What are the sleeping arrangements?",
-        a: "Depending on your selected package, you can rest in a Private Cabin (ideal for couples) or a Shared Deck area (perfect for backpackers). All spaces are optimized for practical comfort during the crossing."
+        a: "Depending on your selected package, you can rest in a Premium Private Suite (ideal for couples seeking privacy) or a Comfortable Shared Cabin. All spaces are optimized for practical luxury during the crossing."
       }
     ]
   },
@@ -95,31 +96,31 @@ const faqData = [
     questions: [
       {
         q: "How are the expedition rates determined?",
-        a: "Pricing varies based on the chosen route, duration, cabin category, and seasonality. For the most accurate and up-to-date rates, please refer to our booking portal or contact our team directly."
+        a: "Pricing varies based on the chosen route, duration, cabin category, and seasonality. For the most accurate and up-to-date rates, please refer to our booking portal or contact our concierge directly."
       },
       {
         q: "Are rates per individual or per group?",
-        a: "For our scheduled shared expeditions (Open Trips), prices are quoted per person. For Private Charters, the cost is calculated for the entire vessel based on the group size and itinerary."
+        a: "For our scheduled shared expeditions (Open Trips), prices are quoted per person. For Private Charters, the cost is calculated for the entire vessel based on the group size and bespoke itinerary."
       },
       {
         q: "Is National Park admission included?",
-        a: "Inclusions differ by package. Some options cover government taxes and Komodo National Park entrance fees, while others do not. Please verify the 'Inclusions' section of your specific package before booking."
+        a: "Inclusions differ by package. Some options cover government taxes and Komodo National Park entrance fees, while others do not. Please carefully verify the 'Inclusions' section of your specific package before booking."
       },
       {
         q: "How do I secure my reservation?",
-        a: "To confirm a booking, a 50% deposit is required. The remaining balance must be settled at least 7 days prior to the departure date, following our payment guidelines."
+        a: "To confirm a booking, a 50% deposit is required. The remaining balance must be settled at least 7 days prior to the departure date, following our secure payment guidelines."
       },
       {
         q: "What is your refund policy?",
-        a: "Refund eligibility is strictly tied to our cancellation timeline. Cancellations made well in advance may qualify for a refund, whereas last-minute cancellations are generally non-refundable. Please review our full Terms & Conditions for exact details."
+        a: "Refund eligibility is strictly tied to our cancellation timeline. Cancellations made well in advance may qualify for a refund, whereas last-minute cancellations are generally non-refundable. Please review our full Terms & Conditions for exact legal details."
       },
       {
         q: "Are there any hidden fees?",
-        a: "We strive for transparency. However, personal expenses, travel insurance, crew gratuities (tips), and flights are not included. Any additional services requested outside the standard package will incur extra charges."
+        a: "We strive for complete transparency. However, personal expenses, travel insurance, crew gratuities (tips), and flights are not included. Any additional services requested outside the standard package will incur transparent extra charges."
       },
       {
         q: "Can I charter the entire boat?",
-        a: "Absolutely. We offer Private Charters tailored for families or private groups. Pricing and availability depend on your preferred dates and bespoke itinerary requests."
+        a: "Absolutely. We offer Private Yacht Charters tailored for families or VIP groups. Pricing and availability depend on your preferred dates and bespoke itinerary requests."
       }
     ]
   }
@@ -129,7 +130,7 @@ function FaqItem({ question, answer }: { question: string, answer: string }) {
   const [isOpen, setIsOpen] = useState(false);
   
   return (
-    <div className={`border rounded-[1.25rem] md:rounded-[1.5rem] overflow-hidden bg-white transition-all duration-300 ${isOpen ? 'border-[#B88E52]/40 shadow-md' : 'border-gray-200 shadow-sm hover:border-gray-300'}`}>
+    <div className={`border rounded-[1.25rem] md:rounded-[1.5rem] overflow-hidden bg-white transition-all duration-300 ${isOpen ? 'border-[#B88E52]/40 shadow-md' : 'border-gray-100 shadow-sm hover:border-[#B88E52]/30'}`}>
       <button 
         onClick={() => setIsOpen(!isOpen)} 
         className="w-full text-left px-5 py-4 md:px-6 md:py-5 flex items-center justify-between focus:outline-none bg-white group"
@@ -150,7 +151,7 @@ function FaqItem({ question, answer }: { question: string, answer: string }) {
             transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
             className="overflow-hidden bg-white"
           >
-            <div className="px-5 pb-5 md:px-6 md:pb-6 text-gray-600 leading-relaxed text-sm md:text-base border-t border-gray-100/0 pt-2">
+            <div className="px-5 pb-5 md:px-6 md:pb-6 text-gray-600 leading-relaxed text-sm md:text-base border-t border-gray-100/0 pt-2 font-light">
               {answer}
             </div>
           </motion.div>
@@ -161,11 +162,12 @@ function FaqItem({ question, answer }: { question: string, answer: string }) {
 }
 
 export default function FaqPage() {
-  const waNumber = "6287817865690";
-  const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20PGI%20Voyage,%20I%20have%20a%20question%20about%20the%20sailing%20trip.`;
+  const waNumber = CONTACT.PHONE_1.replace(/\D/g, '');
+  const encodedBrand = encodeURIComponent(BRAND_NAME);
+  const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20${encodedBrand},%20I%20have%20a%20question%20about%20the%20luxury%20sailing%20trip.`;
 
   return (
-    <main className="flex flex-col w-full bg-[#f8f9fa] min-h-screen overflow-x-hidden">
+    <main className="flex flex-col w-full bg-[#f8f9fa] min-h-screen overflow-x-hidden font-body">
       
       {/* 1. HERO SECTION */}
       <section className="relative pt-28 pb-20 md:pt-40 md:pb-32 lg:pt-48 lg:pb-40 px-5 md:px-12 bg-[#0f172a] overflow-hidden flex flex-col items-center justify-center">
@@ -187,14 +189,14 @@ export default function FaqPage() {
         >
           <motion.div variants={fadeInUp} className="inline-flex items-center gap-1.5 md:gap-2 px-4 py-1.5 md:px-5 md:py-2 rounded-full bg-white/5 border border-white/10 text-[#B88E52] text-[10px] md:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6 backdrop-blur-md shadow-sm">
             <MessageSquare className="h-3.5 w-3.5 md:h-4 md:w-4" />
-            Support Center
+            Concierge Support
           </motion.div>
-          <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6 tracking-tight leading-[1.15] px-2">
+          <motion.h1 variants={fadeInUp} className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6 tracking-tight leading-[1.15] px-2">
             Frequently Asked <br className="hidden sm:block" />
             <span className="italic font-serif text-[#B88E52]">Questions</span>
           </motion.h1>
           <motion.p variants={fadeInUp} className="text-base md:text-lg lg:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed font-light px-4 md:px-0">
-            Find answers regarding our expedition routes, boat amenities, reservation process, and travel preparations.
+            Find clarity regarding our exclusive expedition routes, premium boat amenities, reservation process, and travel preparations.
           </motion.p>
         </motion.div>
       </section>
@@ -214,11 +216,11 @@ export default function FaqPage() {
             >
               {/* Kiri: Kategori Info (Sticky on Desktop) */}
               <motion.div variants={fadeInUp} className="w-full lg:w-1/3 lg:sticky lg:top-32 shrink-0">
-                <div className="w-14 h-14 md:w-16 md:h-16 rounded-[1rem] md:rounded-2xl bg-white border border-gray-200 shadow-sm flex items-center justify-center mb-5 md:mb-6">
+                <div className="w-14 h-14 md:w-16 md:h-16 rounded-[1rem] md:rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center mb-5 md:mb-6">
                   {section.icon}
                 </div>
-                <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-3">{section.category}</h2>
-                <p className="text-gray-600 text-sm md:text-base leading-relaxed pr-4">{section.desc}</p>
+                <h2 className="font-heading text-2xl md:text-3xl font-bold text-[#0f172a] mb-3">{section.category}</h2>
+                <p className="text-gray-600 text-sm md:text-base leading-relaxed pr-4 font-light">{section.desc}</p>
               </motion.div>
 
               {/* Kanan: Daftar Pertanyaan */}
@@ -246,22 +248,22 @@ export default function FaqPage() {
            <div className="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-[#B88E52]/20 rounded-full blur-3xl pointer-events-none"></div>
            <div className="absolute bottom-0 left-0 w-32 h-32 md:w-48 md:h-48 bg-[#B88E52]/10 rounded-full blur-2xl pointer-events-none"></div>
            
-           <div className="w-12 h-12 md:w-16 md:h-16 bg-[#B88E52] rounded-full flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-lg relative z-10">
+           <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-[#B88E52] to-[#a37c46] rounded-full flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-lg relative z-10">
              <Mail className="w-6 h-6 md:w-8 md:h-8 text-white" />
            </div>
            
-           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 md:mb-6 relative z-10 leading-tight">Still have questions?</h2>
+           <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 md:mb-6 relative z-10 leading-tight">Still have questions?</h2>
            <p className="text-gray-300 mb-8 md:mb-10 text-sm md:text-lg relative z-10 max-w-xl mx-auto leading-relaxed font-light px-2 md:px-0">
-             Our voyage specialists are ready to help you plan the perfect Komodo adventure. Send us a message and we'll get back to you shortly.
+             Our voyage specialists and concierges are ready to help you plan the perfect Komodo adventure. Send us a message and we'll get back to you shortly.
            </p>
            
            <a 
               href={b2cWaLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 md:gap-3 px-8 py-4 md:px-10 md:py-5 rounded-full bg-white hover:bg-gray-100 text-[#0f172a] font-bold text-base md:text-lg transition-all shadow-xl hover:-translate-y-1 relative z-10 w-full sm:w-auto"
+              className="inline-flex items-center justify-center gap-2 md:gap-3 px-8 py-4 md:px-10 md:py-5 rounded-full bg-white hover:bg-gray-100 text-[#0f172a] font-bold text-xs md:text-sm uppercase tracking-widest transition-all shadow-xl hover:-translate-y-1 relative z-10 w-full sm:w-auto"
             >
-              Contact Support <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
+              Speak with Our Concierge <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
             </a>
         </motion.div>
       </section>

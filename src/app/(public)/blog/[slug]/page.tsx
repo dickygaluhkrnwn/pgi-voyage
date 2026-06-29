@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { collection, query, where, getDocs, limit, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { BRAND_NAME } from '@/lib/constants';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { Calendar, User, Clock, ChevronLeft, Link as LinkIcon, Loader2, Mail, CheckCircle, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
@@ -51,17 +52,15 @@ export default function PublicBlogDetailPage() {
     
     setIsSubmittingComment(true);
     try {
-      // Simpan ke koleksi 'comments'
       await addDoc(collection(db, 'comments'), {
         blogId: article.id,
         name: newComment.name,
         email: newComment.email,
         text: newComment.text,
         createdAt: serverTimestamp(),
-        status: 'approved' // Bisa diubah ke 'pending' jika butuh moderasi admin di kemudian hari
+        status: 'approved'
       });
 
-      // Update state lokal agar komentar langsung muncul tanpa perlu refresh halaman
       const newCommentData = {
         id: Date.now().toString(),
         name: newComment.name,
@@ -71,7 +70,7 @@ export default function PublicBlogDetailPage() {
       };
       
       setComments([newCommentData, ...comments]);
-      setNewComment({ name: '', email: '', text: '' }); // Kosongkan form
+      setNewComment({ name: '', email: '', text: '' }); 
       setCommentSuccess(true);
       
       setTimeout(() => setCommentSuccess(false), 4000);
@@ -111,7 +110,6 @@ export default function PublicBlogDetailPage() {
           const commentsData: any[] = [];
           commentsSnap.forEach(c => {
             const cData = c.data();
-            // Hanya tampilkan jika status approved (opsional, bisa dihapus kondisinya jika tidak butuh)
             if (cData.status === 'approved' || !cData.status) {
               const cDateObj = cData.createdAt?.toDate();
               cData.formattedDate = cDateObj ? new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric' }).format(cDateObj) : 'Just now';
@@ -120,11 +118,10 @@ export default function PublicBlogDetailPage() {
             }
           });
           
-          // Sort komentar dari yang terbaru di sisi klien (Menghindari error index Firebase)
           commentsData.sort((a, b) => b.timestamp - a.timestamp);
           setComments(commentsData);
 
-          // 3. Fetch Artikel Terkait (Rekomendasi Sidebar)
+          // 3. Fetch Artikel Terkait
           const relatedQ = query(blogsRef, where('status', '==', 'Published'), limit(4));
           const relatedSnap = await getDocs(relatedQ);
           const relatedData: any[] = [];
@@ -141,7 +138,7 @@ export default function PublicBlogDetailPage() {
           setRelatedArticles(relatedData.slice(0, 3));
           
         } else {
-          setArticle(null); // Not found
+          setArticle(null);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -157,7 +154,7 @@ export default function PublicBlogDetailPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8f9fa] pt-20">
         <Loader2 className="w-10 h-10 md:w-12 md:h-12 text-[#B88E52] animate-spin mb-4" />
-        <p className="text-gray-500 font-medium animate-pulse text-sm md:text-base">Loading story...</p>
+        <p className="font-heading text-gray-500 font-medium animate-pulse text-sm md:text-base tracking-widest uppercase">Unfolding story...</p>
       </div>
     );
   }
@@ -165,9 +162,9 @@ export default function PublicBlogDetailPage() {
   if (!article) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center bg-[#f8f9fa] pt-20 px-5 md:px-6 text-center">
-        <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-[#0f172a] mb-4">Article Not Found</h1>
-        <p className="text-gray-500 text-base md:text-lg mb-8 max-w-md">The story you are looking for does not exist or has been unpublished.</p>
-        <Link href="/blog" className="px-6 py-3 md:px-8 md:py-3.5 rounded-full bg-[#B88E52] text-white font-bold shadow-lg hover:bg-[#a37c46] transition-colors text-sm md:text-base">
+        <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-bold text-[#0f172a] mb-4">Article Not Found</h1>
+        <p className="text-gray-500 text-base md:text-lg mb-8 max-w-md font-light">The story you are looking for does not exist or has been archived.</p>
+        <Link href="/blog" className="px-8 py-3.5 rounded-full bg-[#B88E52] text-white font-bold shadow-lg hover:bg-[#a37c46] transition-colors text-xs md:text-sm uppercase tracking-widest">
           Return to Journal
         </Link>
       </div>
@@ -177,7 +174,7 @@ export default function PublicBlogDetailPage() {
   const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
 
   return (
-    <main className="flex flex-col w-full bg-[#f8f9fa] min-h-screen relative overflow-x-hidden">
+    <main className="flex flex-col w-full bg-[#f8f9fa] min-h-screen relative overflow-x-hidden font-body">
       
       {/* TOAST NOTIFICATION */}
       <AnimatePresence>
@@ -187,10 +184,10 @@ export default function PublicBlogDetailPage() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
             transition={{ type: "spring", bounce: 0.4, duration: 0.6 }}
-            className="fixed bottom-8 md:bottom-10 left-1/2 transform -translate-x-1/2 z-[100] flex items-center gap-2 md:gap-3 bg-[#0f172a] text-white px-5 py-3 md:px-6 md:py-3.5 rounded-full shadow-2xl border border-white/10 w-max"
+            className="fixed bottom-8 md:bottom-10 left-1/2 transform -translate-x-1/2 z-[100] flex items-center gap-2 md:gap-3 bg-[#0f172a] text-white px-6 py-3 rounded-full shadow-2xl border border-white/10 w-max"
           >
             <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-[#B88E52]" />
-            <span className="font-semibold text-xs md:text-sm tracking-wide">Link copied!</span>
+            <span className="font-semibold text-xs md:text-sm tracking-widest uppercase">Link copied!</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -209,13 +206,13 @@ export default function PublicBlogDetailPage() {
           transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
           className="relative z-10 max-w-7xl mx-auto w-full px-5 md:px-6 lg:px-12 text-center md:text-left"
         >
-          <div className="inline-flex items-center gap-1.5 md:gap-2 px-3 py-1 md:px-4 md:py-1.5 rounded-full bg-[#B88E52] text-white text-[10px] md:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6 shadow-lg">
+          <div className="inline-flex items-center gap-1.5 md:gap-2 px-4 py-1.5 rounded-full bg-[#B88E52] text-white text-[10px] md:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6 shadow-lg">
             {article.category || 'Editorial'}
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-6 md:mb-8 leading-[1.2] md:leading-tight drop-shadow-lg tracking-tight max-w-5xl px-2 md:px-0">
+          <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-6 md:mb-8 leading-[1.2] md:leading-tight drop-shadow-lg tracking-tight max-w-5xl px-2 md:px-0">
             {article.title}
           </h1>
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 md:gap-6 text-white/80 text-xs md:text-sm font-medium">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 md:gap-6 text-white/80 text-xs md:text-sm font-semibold uppercase tracking-widest">
             <span className="flex items-center gap-1.5 md:gap-2"><User className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#B88E52]" /> {article.author || 'Editorial Team'}</span>
             <span className="flex items-center gap-1.5 md:gap-2"><Calendar className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#B88E52]" /> {article.formattedDate}</span>
             <span className="flex items-center gap-1.5 md:gap-2"><Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#B88E52]" /> {article.readTime || '5 min read'}</span>
@@ -228,16 +225,16 @@ export default function PublicBlogDetailPage() {
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           
           {/* KIRI: KONTEN ARTIKEL & KOMENTAR */}
-          <div className="w-full lg:w-2/3 bg-transparent sm:bg-white sm:rounded-[2rem] md:rounded-[3rem] sm:shadow-sm lg:shadow-[0_20px_50px_rgba(15,23,42,0.04)] px-5 py-8 sm:p-8 md:p-12 lg:p-16 sm:border sm:border-gray-100">
+          <div className="w-full lg:w-2/3 bg-transparent sm:bg-white sm:rounded-[2rem] md:rounded-[3rem] sm:shadow-[0_20px_50px_rgba(15,23,42,0.04)] px-5 py-8 sm:p-8 md:p-12 lg:p-16 sm:border sm:border-gray-100">
             
             {/* Top Action & Share */}
             <div className="flex flex-row items-center justify-between gap-4 mb-8 md:mb-12 pb-6 md:pb-8 border-b border-gray-200 sm:border-gray-100">
-              <Link href="/blog" className="inline-flex items-center gap-1.5 md:gap-2 text-gray-500 hover:text-[#B88E52] transition-colors text-xs md:text-sm font-semibold whitespace-nowrap">
+              <Link href="/blog" className="inline-flex items-center gap-1.5 md:gap-2 text-gray-500 hover:text-[#B88E52] transition-colors text-[10px] md:text-xs font-bold uppercase tracking-widest whitespace-nowrap">
                 <ChevronLeft className="w-3.5 h-3.5 md:w-4 md:h-4" /> <span className="hidden sm:inline">Back to</span> Journal
               </Link>
               
               <div className="flex items-center gap-2 md:gap-3">
-                <span className="hidden sm:inline text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider">Share:</span>
+                <span className="hidden sm:inline text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">Share:</span>
                 <a href={`https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`} target="_blank" rel="noopener noreferrer" className="w-8 h-8 md:w-9 md:h-9 rounded-full border border-gray-200 bg-white sm:bg-transparent flex items-center justify-center text-gray-500 hover:border-[#0f172a] hover:bg-gray-50 transition-all shadow-sm sm:shadow-none">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 md:w-4 md:h-4"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
                 </a>
@@ -259,25 +256,25 @@ export default function PublicBlogDetailPage() {
             {/* Author Signature & Tags */}
             <div className="mt-12 md:mt-16 pt-8 border-t border-gray-200 sm:border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
               <div className="flex items-center gap-3 md:gap-4">
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#fdfaf5] border border-[#B88E52]/20 flex items-center justify-center text-[#B88E52] font-bold text-lg md:text-xl shrink-0">
-                  {article.author?.charAt(0).toUpperCase() || 'U'}
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#fdfaf5] border border-[#B88E52]/20 flex items-center justify-center text-[#B88E52] font-heading font-bold text-lg md:text-xl shrink-0">
+                  {article.author?.charAt(0).toUpperCase() || 'E'}
                 </div>
                 <div>
-                  <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-wider font-semibold mb-0.5 md:mb-1">Written By</p>
-                  <p className="font-bold text-[#0f172a] text-base md:text-lg leading-tight">{article.author || 'Editorial Team'}</p>
+                  <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest font-semibold mb-0.5 md:mb-1">Penned By</p>
+                  <p className="font-heading font-bold text-[#0f172a] text-lg md:text-xl leading-tight">{article.author || 'Editorial Team'}</p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                 <span className="px-3 md:px-4 py-1.5 rounded-full bg-white sm:bg-gray-50 text-gray-600 text-[10px] md:text-xs font-semibold border border-gray-200 sm:border-gray-100 shadow-sm sm:shadow-none">#{article.category?.replace(/\s+/g, '') || 'Article'}</span>
-                 <span className="px-3 md:px-4 py-1.5 rounded-full bg-white sm:bg-gray-50 text-gray-600 text-[10px] md:text-xs font-semibold border border-gray-200 sm:border-gray-100 shadow-sm sm:shadow-none">#PGIVoyage</span>
+                 <span className="px-4 py-1.5 rounded-full bg-white sm:bg-gray-50 text-gray-600 text-[10px] md:text-xs uppercase tracking-widest font-semibold border border-gray-200 sm:border-gray-100 shadow-sm sm:shadow-none">#{article.category?.replace(/\s+/g, '') || 'Article'}</span>
+                 <span className="px-4 py-1.5 rounded-full bg-white sm:bg-gray-50 text-gray-600 text-[10px] md:text-xs uppercase tracking-widest font-semibold border border-gray-200 sm:border-gray-100 shadow-sm sm:shadow-none">#{BRAND_NAME.replace(/\s+/g, '')}</span>
               </div>
             </div>
 
             {/* ========================================================= */}
-            {/* KOMENTAR SECTION (DINAMIS DARI FIRESTORE)                   */}
+            {/* KOMENTAR SECTION                 */}
             {/* ========================================================= */}
             <div className="mt-12 md:mt-16 pt-10 md:pt-12 border-t border-gray-200 sm:border-gray-100">
-              <h3 className="text-xl md:text-2xl font-bold text-[#0f172a] mb-6 md:mb-8">Join the Conversation</h3>
+              <h3 className="font-heading text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8">Join the Conversation</h3>
               
               {/* Form Leave a Reply */}
               <div className="bg-white sm:bg-[#fdfaf5] p-6 sm:p-8 md:p-10 rounded-2xl md:rounded-[2rem] border border-gray-200 sm:border-[#B88E52]/20 mb-10 md:mb-12 shadow-sm sm:shadow-none relative overflow-hidden">
@@ -289,13 +286,13 @@ export default function PublicBlogDetailPage() {
                       exit={{ opacity: 0, y: -20 }}
                       className="absolute top-0 inset-x-0 bg-green-500 text-white text-center py-2 text-sm font-semibold flex items-center justify-center gap-2"
                     >
-                      <CheckCircle className="w-4 h-4" /> Comment posted successfully!
+                      <CheckCircle className="w-4 h-4" /> Insight shared successfully!
                     </motion.div>
                   )}
                 </AnimatePresence>
                 
-                <h4 className="text-base md:text-lg font-bold text-[#0f172a] mb-1.5 md:mb-2 mt-2">Leave a Reply</h4>
-                <p className="text-xs md:text-sm text-gray-500 mb-5 md:mb-6">Your email address will not be published. Required fields are marked *</p>
+                <h4 className="font-heading text-xl md:text-2xl font-bold text-[#0f172a] mb-1.5 md:mb-2 mt-2">Leave a Reply</h4>
+                <p className="text-xs md:text-sm text-gray-500 mb-5 md:mb-6 font-light">Your email address will not be published. Required fields are marked *</p>
                 <form className="space-y-3 md:space-y-4" onSubmit={handleCommentSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     <input 
@@ -318,7 +315,7 @@ export default function PublicBlogDetailPage() {
                     />
                   </div>
                   <textarea 
-                    placeholder="Your Comment *" 
+                    placeholder="Your Insight *" 
                     rows={4} 
                     value={newComment.text}
                     onChange={(e) => setNewComment({...newComment, text: e.target.value})}
@@ -329,12 +326,12 @@ export default function PublicBlogDetailPage() {
                   <button 
                     type="submit" 
                     disabled={isSubmittingComment}
-                    className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-3.5 rounded-xl bg-[#0f172a] text-white font-bold text-sm hover:bg-[#1e293b] transition-colors shadow-md flex items-center justify-center gap-2 disabled:opacity-70"
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#0f172a] text-white font-bold text-[10px] md:text-xs uppercase tracking-widest hover:bg-[#1e293b] transition-colors shadow-md flex items-center justify-center gap-2 disabled:opacity-70"
                   >
                     {isSubmittingComment ? (
                       <><Loader2 className="w-4 h-4 animate-spin" /> Posting...</>
                     ) : (
-                      "Post Comment"
+                      "Post Insight"
                     )}
                   </button>
                 </form>
@@ -351,15 +348,15 @@ export default function PublicBlogDetailPage() {
                       key={comment.id || idx} 
                       className="flex gap-3 md:gap-6"
                     >
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#fdfaf5] border border-[#B88E52]/20 flex items-center justify-center text-[#B88E52] font-bold shrink-0 shadow-sm">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#fdfaf5] border border-[#B88E52]/20 flex items-center justify-center text-[#B88E52] font-heading font-bold text-lg shrink-0 shadow-sm">
                         {comment.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 md:gap-3 mb-1">
                           <h5 className="font-bold text-[#0f172a] text-sm md:text-base">{comment.name}</h5>
-                          <span className="text-[10px] md:text-xs text-gray-400">{comment.formattedDate}</span>
+                          <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-gray-400">{comment.formattedDate}</span>
                         </div>
-                        <p className="text-gray-600 text-xs md:text-sm leading-relaxed pr-2 whitespace-pre-wrap">{comment.text}</p>
+                        <p className="text-gray-600 text-sm leading-relaxed pr-2 whitespace-pre-wrap font-light">{comment.text}</p>
                       </div>
                     </motion.div>
                   ))
@@ -379,7 +376,7 @@ export default function PublicBlogDetailPage() {
             
             {/* Box Rekomendasi */}
             <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 border border-gray-100 shadow-[0_10px_40px_rgba(15,23,42,0.03)]">
-              <h3 className="text-lg md:text-xl font-bold text-[#0f172a] mb-5 md:mb-6 flex items-center gap-2">
+              <h3 className="font-heading text-xl md:text-2xl font-bold text-[#0f172a] mb-5 md:mb-6 flex items-center gap-2">
                 <span className="w-1.5 h-5 md:h-6 bg-[#B88E52] rounded-full inline-block"></span> Recommended
               </h3>
               
@@ -391,8 +388,8 @@ export default function PublicBlogDetailPage() {
                         <img src={rel.coverImage || "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=200"} alt={rel.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-[#0f172a] text-xs md:text-sm leading-snug line-clamp-2 group-hover:text-[#B88E52] transition-colors mb-1 pr-2">{rel.title}</h4>
-                        <span className="text-[10px] md:text-xs text-gray-400">{rel.formattedDate}</span>
+                        <h4 className="font-bold text-[#0f172a] text-xs md:text-sm leading-snug line-clamp-2 group-hover:text-[#B88E52] transition-colors mb-1.5 pr-2">{rel.title}</h4>
+                        <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-gray-400 font-semibold">{rel.formattedDate}</span>
                       </div>
                     </Link>
                   ))
@@ -401,8 +398,8 @@ export default function PublicBlogDetailPage() {
                 )}
               </div>
               
-              <Link href="/blog" className="mt-6 md:mt-8 flex items-center justify-center w-full py-3 rounded-xl bg-gray-50 text-[#0f172a] text-xs md:text-sm font-bold hover:bg-gray-100 transition-colors border border-gray-100">
-                View All Posts
+              <Link href="/blog" className="mt-6 md:mt-8 flex items-center justify-center w-full py-3.5 rounded-full bg-gray-50 text-[#0f172a] text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-100 transition-colors border border-gray-100">
+                View All Journal Entries
               </Link>
             </div>
 
@@ -413,12 +410,12 @@ export default function PublicBlogDetailPage() {
               <div className="w-12 h-12 md:w-14 md:h-14 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10 relative z-10">
                 <Mail className="w-5 h-5 md:w-6 md:h-6 text-[#B88E52]" />
               </div>
-              <h3 className="text-lg md:text-xl font-bold text-white mb-2 relative z-10">Get Travel Updates</h3>
-              <p className="text-gray-400 text-xs md:text-sm mb-5 md:mb-6 relative z-10">Subscribe for secret destinations and early-bird promo codes.</p>
+              <h3 className="font-heading text-xl md:text-2xl font-bold text-white mb-2 relative z-10">Exclusive Travel Updates</h3>
+              <p className="text-gray-400 text-xs md:text-sm mb-5 md:mb-6 relative z-10 font-light">Subscribe for secret destinations and early-bird promo codes.</p>
               
               <form className="relative z-10" onSubmit={(e) => { e.preventDefault(); alert("Thanks for subscribing!"); }}>
-                <input type="email" placeholder="Email address" className="w-full px-4 py-2.5 md:py-3 rounded-xl bg-white/5 border border-white/10 text-white text-xs md:text-sm focus:outline-none focus:border-[#B88E52] mb-2.5 md:mb-3" required />
-                <button type="submit" className="w-full py-2.5 md:py-3 rounded-xl bg-[#B88E52] text-white text-xs md:text-sm font-bold hover:bg-[#a37c46] transition-colors">Subscribe</button>
+                <input type="email" placeholder="Email address" className="w-full px-5 py-3 md:py-3.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs md:text-sm focus:outline-none focus:border-[#B88E52] mb-2.5 md:mb-3 backdrop-blur-sm" required />
+                <button type="submit" className="w-full py-3 rounded-xl bg-[#B88E52] text-white text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-[#a37c46] transition-colors">Subscribe</button>
               </form>
             </div>
 
@@ -428,43 +425,42 @@ export default function PublicBlogDetailPage() {
 
       {/* Global Style untuk TipTap HTML Khusus Mobile & Desktop */}
       <style dangerouslySetInnerHTML={{__html: `
-        .article-content { font-family: var(--font-geist-sans), sans-serif; overflow-wrap: break-word; word-wrap: break-word; }
+        .article-content { font-family: var(--font-body), sans-serif; overflow-wrap: break-word; word-wrap: break-word; }
         
         /* Drop cap effect */
         .article-content > p:first-of-type::first-letter { 
-          font-size: 3rem; 
+          font-family: var(--font-heading), serif;
+          font-size: 3.5rem; 
           font-weight: 800; 
           float: left; 
           line-height: 0.8; 
-          margin-right: 0.5rem; 
+          margin-right: 0.75rem; 
           color: #0f172a; 
           margin-top: 0.2rem; 
         }
         
         /* Paragraphs */
-        .article-content p { color: #374151; line-height: 1.7; font-size: 1rem; margin-bottom: 1.25rem; }
+        .article-content p { color: #374151; line-height: 1.8; font-size: 1rem; margin-bottom: 1.5rem; font-weight: 300; }
         
         /* Headings */
-        .article-content h2 { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-top: 2.5rem; margin-bottom: 1rem; line-height: 1.3; letter-spacing: -0.01em; }
-        .article-content h3 { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-top: 2rem; margin-bottom: 0.75rem; }
+        .article-content h2 { font-family: var(--font-heading), serif; font-size: 1.75rem; font-weight: 700; color: #0f172a; margin-top: 3rem; margin-bottom: 1.25rem; line-height: 1.3; }
+        .article-content h3 { font-family: var(--font-heading), serif; font-size: 1.35rem; font-weight: 700; color: #0f172a; margin-top: 2.5rem; margin-bottom: 1rem; }
         
         /* Lists */
-        .article-content ul { list-style-type: disc; padding-left: 1.25rem; margin-bottom: 1.25rem; color: #374151; font-size: 1rem; line-height: 1.7; }
-        .article-content ol { list-style-type: decimal; padding-left: 1.25rem; margin-bottom: 1.25rem; color: #374151; font-size: 1rem; line-height: 1.7; }
-        .article-content li { margin-bottom: 0.5rem; }
+        .article-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.5rem; color: #374151; font-size: 1rem; line-height: 1.8; font-weight: 300;}
+        .article-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1.5rem; color: #374151; font-size: 1rem; line-height: 1.8; font-weight: 300;}
+        .article-content li { margin-bottom: 0.75rem; }
         
         /* Quotes */
         .article-content blockquote { 
-          border-left-width: 4px; 
+          border-left-width: 3px; 
           border-color: #B88E52; 
-          padding-left: 1rem; 
+          padding-left: 1.5rem; 
           font-style: italic; 
-          color: #4b5563; 
-          margin: 2rem 0; 
-          background-color: #fdfaf5; 
-          padding: 1.25rem; 
-          border-radius: 0 1rem 1rem 0; 
-          font-size: 1.05rem; 
+          color: #0f172a; 
+          margin: 2.5rem 0; 
+          font-family: var(--font-heading), serif;
+          font-size: 1.25rem; 
           line-height: 1.6; 
         }
         
@@ -475,22 +471,20 @@ export default function PublicBlogDetailPage() {
         .article-content img { 
           max-width: 100%; 
           height: auto; 
-          border-radius: 0.75rem; 
-          box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
-          margin: 2rem auto; 
+          border-radius: 1rem; 
+          box-shadow: 0 10px 30px rgba(15,23,42,0.08); 
+          margin: 3rem auto; 
           display: block; 
         }
 
         /* Responsif Desktop/Tablet Besar */
         @media (min-width: 768px) {
-          .article-content > p:first-of-type::first-letter { font-size: 3.5rem; }
-          .article-content p { font-size: 1.125rem; line-height: 1.8; margin-bottom: 1.5rem; }
-          .article-content h2 { font-size: 2rem; margin-top: 3rem; margin-bottom: 1.25rem; }
-          .article-content h3 { font-size: 1.5rem; margin-top: 2.5rem; margin-bottom: 1rem; }
-          .article-content ul, .article-content ol { font-size: 1.125rem; padding-left: 1.5rem; margin-bottom: 1.5rem; }
-          .article-content li { margin-bottom: 0.75rem; }
-          .article-content blockquote { font-size: 1.25rem; padding: 1.5rem; margin: 2.5rem 0; border-radius: 0 1.5rem 1.5rem 0; }
-          .article-content img { border-radius: 1rem; margin: 3rem auto; }
+          .article-content > p:first-of-type::first-letter { font-size: 4.5rem; }
+          .article-content p { font-size: 1.125rem; line-height: 1.9; }
+          .article-content h2 { font-size: 2.25rem; }
+          .article-content h3 { font-size: 1.75rem; }
+          .article-content ul, .article-content ol { font-size: 1.125rem; }
+          .article-content blockquote { font-size: 1.5rem; padding-left: 2rem; margin: 3.5rem 0; }
         }
       `}} />
 

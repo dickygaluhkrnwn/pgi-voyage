@@ -3,6 +3,7 @@
 import { ShieldCheck, Lock, FileText, Mail, ChevronRight, BookOpen } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import { useState, useEffect } from "react";
+import { BRAND_NAME } from "@/lib/constants";
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -22,7 +23,7 @@ const staggerContainer: Variants = {
 };
 
 export default function PrivacyPolicyPage() {
-  const lastUpdated = "June 4, 2026";
+  const lastUpdated = "June 20, 2026";
   const [activeSection, setActiveSection] = useState("section-intro");
 
   // Intersection Observer untuk mendeteksi bagian mana yang sedang dibaca
@@ -76,7 +77,7 @@ export default function PrivacyPolicyPage() {
   ];
 
   return (
-    <main className="flex flex-col w-full bg-[#f8f9fa] min-h-screen overflow-x-hidden">
+    <main className="flex flex-col w-full bg-[#f8f9fa] min-h-screen overflow-x-hidden font-body">
       
       {/* HERO SECTION */}
       <section className="relative pt-28 pb-32 md:pt-40 md:pb-48 lg:pt-48 lg:pb-56 px-5 md:px-12 bg-[#0f172a] overflow-hidden flex flex-col items-center justify-center">
@@ -99,12 +100,12 @@ export default function PrivacyPolicyPage() {
             <ShieldCheck className="h-3.5 w-3.5 md:h-4 md:w-4" />
             Legal Document
           </motion.div>
-          <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6 tracking-tight leading-[1.15] px-2 drop-shadow-sm">
+          <motion.h1 variants={fadeInUp} className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6 tracking-tight leading-[1.15] px-2 drop-shadow-sm">
             Privacy <br className="hidden sm:block" />
             <span className="italic font-serif text-[#B88E52]">Policy</span>
           </motion.h1>
           <motion.p variants={fadeInUp} className="text-base md:text-lg lg:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed font-light px-4 md:px-0">
-            We are committed to protecting your privacy and personal information. Learn how PMM Voyage collects, uses, and safeguards your data.
+            We are committed to protecting your privacy. Learn how {BRAND_NAME} collects, uses, and safeguards your exclusive data.
           </motion.p>
         </motion.div>
       </section>
@@ -122,7 +123,7 @@ export default function PrivacyPolicyPage() {
           >
             <div className="flex items-center gap-3 mb-6 border-b border-gray-100 pb-6">
               <BookOpen className="w-6 h-6 text-[#B88E52]" />
-              <h3 className="font-bold text-[#0f172a] text-lg">Contents</h3>
+              <h3 className="font-heading font-bold text-[#0f172a] text-lg">Contents</h3>
             </div>
             <ul className="space-y-2">
               {navItems.map((item) => (
@@ -131,7 +132,7 @@ export default function PrivacyPolicyPage() {
                     onClick={() => scrollToSection(item.id)}
                     className={`w-full text-left flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 text-sm font-semibold ${
                       activeSection === item.id 
-                        ? 'bg-[#fdfaf5] text-[#B88E52] border border-[#B88E52]/20' 
+                        ? 'bg-[#fdfaf5] text-[#B88E52] border border-[#B88E52]/20 shadow-sm' 
                         : 'text-gray-500 hover:bg-gray-50 hover:text-[#0f172a] border border-transparent'
                     }`}
                   >
@@ -162,7 +163,7 @@ export default function PrivacyPolicyPage() {
               
               <div id="section-intro" className="scroll-mt-32">
                 <p className="text-lg md:text-xl text-[#0f172a] mb-10 leading-relaxed font-medium">
-                  At <strong className="text-[#B88E52]">PMM Voyage</strong>, we are committed to protecting your privacy and personal information. This Privacy Policy explains how we collect, use, store, and protect your data when you visit our website, make a booking, or use our services.
+                  At <strong className="text-[#B88E52]">{BRAND_NAME}</strong>, we are committed to protecting your privacy and personal information. This Privacy Policy explains how we collect, use, store, and protect your data when you visit our website, make an exclusive booking, or use our premium services.
                   <br /><br />
                   By accessing our website and using our services, you agree to the terms of this Privacy Policy.
                 </p>
@@ -172,27 +173,27 @@ export default function PrivacyPolicyPage() {
                 
                 {/* Section 1 */}
                 <div id="section-1" className="scroll-mt-32">
-                  <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
+                  <h2 className="font-heading text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
                     <span className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#B88E52]/10 text-[#B88E52] text-sm md:text-base shrink-0">1</span>
                     Information We Collect
                   </h2>
                   <p className="mb-6 leading-relaxed">We may collect the following types of information to provide and improve our services:</p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                    <div className="bg-gray-50 p-5 md:p-6 rounded-2xl border border-gray-100">
-                      <strong className="text-[#0f172a] block mb-2 text-base md:text-lg">Personal Information</strong>
+                    <div className="bg-gray-50 p-5 md:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <strong className="font-heading text-[#0f172a] block mb-2 text-base md:text-lg">Personal Information</strong>
                       <span className="text-sm md:text-base leading-relaxed">This may include your name, email address, phone number, billing details, and payment information when you make a reservation or contact our team.</span>
                     </div>
-                    <div className="bg-gray-50 p-5 md:p-6 rounded-2xl border border-gray-100">
-                      <strong className="text-[#0f172a] block mb-2 text-base md:text-lg">Booking Information</strong>
-                      <span className="text-sm md:text-base leading-relaxed">This may include your travel dates, selected package, number of guests, cabin preferences, special requests, and trip-related details.</span>
+                    <div className="bg-gray-50 p-5 md:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <strong className="font-heading text-[#0f172a] block mb-2 text-base md:text-lg">Booking Information</strong>
+                      <span className="text-sm md:text-base leading-relaxed">This may include your travel dates, selected package, number of guests, cabin preferences, special dietary requests, and trip-related details.</span>
                     </div>
-                    <div className="bg-gray-50 p-5 md:p-6 rounded-2xl border border-gray-100">
-                      <strong className="text-[#0f172a] block mb-2 text-base md:text-lg">Technical Data</strong>
+                    <div className="bg-gray-50 p-5 md:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <strong className="font-heading text-[#0f172a] block mb-2 text-base md:text-lg">Technical Data</strong>
                       <span className="text-sm md:text-base leading-relaxed">We may collect technical information such as your IP address, browser type, device type, pages visited, and browsing behavior on our website.</span>
                     </div>
-                    <div className="bg-gray-50 p-5 md:p-6 rounded-2xl border border-gray-100">
-                      <strong className="text-[#0f172a] block mb-2 text-base md:text-lg">Cookies & Tracking</strong>
+                    <div className="bg-gray-50 p-5 md:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <strong className="font-heading text-[#0f172a] block mb-2 text-base md:text-lg">Cookies & Tracking</strong>
                       <span className="text-sm md:text-base leading-relaxed">We may use cookies to improve user experience, analyze website traffic, remember preferences, and personalize content.</span>
                     </div>
                   </div>
@@ -200,16 +201,16 @@ export default function PrivacyPolicyPage() {
 
                 {/* Section 2 */}
                 <div id="section-2" className="scroll-mt-32">
-                  <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
+                  <h2 className="font-heading text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
                     <span className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#B88E52]/10 text-[#B88E52] text-sm md:text-base shrink-0">2</span>
                     How We Use Your Information
                   </h2>
                   <p className="mb-4 leading-relaxed">We use your information to:</p>
                   <ul className="list-disc list-outside ml-6 space-y-3 marker:text-[#B88E52]">
-                    <li className="pl-2">Process bookings and payments efficiently.</li>
+                    <li className="pl-2">Process bookings and payments securely.</li>
                     <li className="pl-2">Communicate with you about your reservation and itinerary.</li>
-                    <li className="pl-2">Provide highly responsive customer support.</li>
-                    <li className="pl-2">Improve our website, services, and overall customer experience.</li>
+                    <li className="pl-2">Provide highly responsive concierge and customer support.</li>
+                    <li className="pl-2">Improve our website, services, and overall guest experience.</li>
                     <li className="pl-2">Send promotional offers or newsletters (only with your explicit consent).</li>
                     <li className="pl-2">Prevent fraud and protect website security.</li>
                     <li className="pl-2">Comply with legal, regulatory, or tax obligations.</li>
@@ -218,7 +219,7 @@ export default function PrivacyPolicyPage() {
 
                 {/* Section 3 */}
                 <div id="section-3" className="scroll-mt-32">
-                  <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
+                  <h2 className="font-heading text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
                     <span className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#B88E52]/10 text-[#B88E52] text-sm md:text-base shrink-0">3</span>
                     How We Share Your Information
                   </h2>
@@ -227,22 +228,22 @@ export default function PrivacyPolicyPage() {
                     <li className="flex gap-4">
                       <div className="w-2 h-2 rounded-full bg-[#B88E52] mt-2 shrink-0"></div>
                       <div>
-                        <strong className="text-[#0f172a] text-lg block mb-1">Service Providers</strong>
-                        <span className="leading-relaxed">Such as payment processors, booking systems, customer support tools, email services, and marketing partners that help us operate our services securely.</span>
+                        <strong className="font-heading text-[#0f172a] text-lg block mb-1">Service Providers</strong>
+                        <span className="leading-relaxed">Such as premium payment processors, booking systems, customer support tools, email services, and trusted marketing partners that help us operate securely.</span>
                       </div>
                     </li>
                     <li className="flex gap-4">
                       <div className="w-2 h-2 rounded-full bg-[#B88E52] mt-2 shrink-0"></div>
                       <div>
-                        <strong className="text-[#0f172a] text-lg block mb-1">Legal Compliance</strong>
+                        <strong className="font-heading text-[#0f172a] text-lg block mb-1">Legal Compliance</strong>
                         <span className="leading-relaxed">We may disclose your information if required by law, regulation, legal process, or legitimate government authority requests.</span>
                       </div>
                     </li>
                     <li className="flex gap-4">
                       <div className="w-2 h-2 rounded-full bg-[#B88E52] mt-2 shrink-0"></div>
                       <div>
-                        <strong className="text-[#0f172a] text-lg block mb-1">Business Transfers</strong>
-                        <span className="leading-relaxed">If PMM Voyage is involved in a merger, acquisition, sale, or transfer of assets, your information may be transferred as part of that transaction.</span>
+                        <strong className="font-heading text-[#0f172a] text-lg block mb-1">Business Transfers</strong>
+                        <span className="leading-relaxed">If {BRAND_NAME} is involved in a merger, acquisition, sale, or transfer of assets, your information may be transferred as part of that transaction.</span>
                       </div>
                     </li>
                   </ul>
@@ -250,18 +251,18 @@ export default function PrivacyPolicyPage() {
 
                 {/* Section 4 */}
                 <div id="section-4" className="scroll-mt-32">
-                  <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
+                  <h2 className="font-heading text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
                     <span className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#B88E52]/10 text-[#B88E52] text-sm md:text-base shrink-0">4</span>
                     Data Security
                   </h2>
                   <p className="leading-relaxed">
-                    We take reasonable steps to protect your personal information from unauthorized access, loss, misuse, or disclosure. However, no method of data transmission over the internet or electronic storage is completely secure. Therefore, we cannot guarantee absolute security, and we encourage users to take appropriate precautions when using our website and submitting sensitive data.
+                    We take reasonable steps to protect your personal information from unauthorized access, loss, misuse, or disclosure. However, no method of data transmission over the internet or electronic storage is completely secure. Therefore, we cannot guarantee absolute security, and we encourage guests to take appropriate precautions when submitting sensitive data.
                   </p>
                 </div>
 
                 {/* Section 5 */}
                 <div id="section-5" className="scroll-mt-32">
-                  <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
+                  <h2 className="font-heading text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
                     <span className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#B88E52]/10 text-[#B88E52] text-sm md:text-base shrink-0">5</span>
                     Your Rights and Choices
                   </h2>
@@ -274,13 +275,13 @@ export default function PrivacyPolicyPage() {
                     <li className="pl-2">Disable cookies through your browser settings.</li>
                   </ul>
                   <p className="leading-relaxed bg-[#fdfaf5] p-4 rounded-xl border border-[#B88E52]/20 text-sm md:text-base">
-                    For privacy-related requests, please contact us through the official contact information provided on our website.
+                    For privacy-related requests, please contact our concierge through the official contact information provided on our website.
                   </p>
                 </div>
 
                 {/* Section 6 */}
                 <div id="section-6" className="scroll-mt-32">
-                  <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
+                  <h2 className="font-heading text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
                     <span className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#B88E52]/10 text-[#B88E52] text-sm md:text-base shrink-0">6</span>
                     Third-Party Links
                   </h2>
@@ -291,7 +292,7 @@ export default function PrivacyPolicyPage() {
 
                 {/* Section 7 */}
                 <div id="section-7" className="scroll-mt-32">
-                  <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
+                  <h2 className="font-heading text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
                     <span className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#B88E52]/10 text-[#B88E52] text-sm md:text-base shrink-0">7</span>
                     Cookies Policy
                   </h2>
@@ -311,7 +312,7 @@ export default function PrivacyPolicyPage() {
 
                 {/* Section 8 */}
                 <div id="section-8" className="scroll-mt-32">
-                  <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
+                  <h2 className="font-heading text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
                     <span className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#B88E52]/10 text-[#B88E52] text-sm md:text-base shrink-0">8</span>
                     Data Retention
                   </h2>
@@ -322,12 +323,12 @@ export default function PrivacyPolicyPage() {
 
                 {/* Section 9 */}
                 <div id="section-9" className="scroll-mt-32">
-                  <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
+                  <h2 className="font-heading text-2xl md:text-3xl font-bold text-[#0f172a] mb-6 md:mb-8 flex items-center gap-3">
                     <span className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#B88E52]/10 text-[#B88E52] text-sm md:text-base shrink-0">9</span>
                     Changes to This Privacy Policy
                   </h2>
                   <p className="leading-relaxed">
-                    PMM Voyage may update this Privacy Policy from time to time. Any changes will be posted on this page with the updated effective date. We encourage visitors to review this page regularly to stay informed about how we protect personal information.
+                    {BRAND_NAME} may update this Privacy Policy from time to time. Any changes will be posted on this page with the updated effective date. We encourage visitors to review this page regularly to stay informed about how we protect personal information.
                   </p>
                 </div>
 
@@ -339,9 +340,9 @@ export default function PrivacyPolicyPage() {
                   <div className="w-12 h-12 md:w-16 md:h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-lg border border-white/20 relative z-10">
                     <Mail className="w-6 h-6 md:w-8 md:h-8 text-[#B88E52]" />
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 md:mb-4 relative z-10">Questions About Privacy?</h2>
+                  <h2 className="font-heading text-2xl md:text-3xl font-bold text-white mb-3 md:mb-4 relative z-10">Questions About Privacy?</h2>
                   <p className="text-gray-300 text-sm md:text-base leading-relaxed relative z-10 max-w-xl mx-auto">
-                    If you have any questions about this Privacy Policy or how your personal information is handled by PMM Voyage, please feel free to reach out to our support team.
+                    If you have any questions about this Privacy Policy or how your personal information is handled by {BRAND_NAME}, please feel free to reach out to our support team.
                   </p>
                 </div>
 

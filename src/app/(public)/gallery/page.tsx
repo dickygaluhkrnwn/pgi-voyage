@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { BRAND_NAME, CONTACT } from '@/lib/constants';
 import { motion, Variants, AnimatePresence } from "framer-motion";
 import { 
   ArrowRight, 
@@ -44,9 +45,9 @@ const imgPinkBeach = "https://images.unsplash.com/photo-1724127722795-96efb9caff
 // --- CATEGORY DATA (Editorial View) ---
 const categories = [
   { id: 'all', label: 'All Destinations', icon: Compass, subtitle: '', desc: '' },
-  { id: 'vessel', label: 'KM Pulau Mas 88', icon: Ship, subtitle: 'The Flagship Vessel', desc: 'Engineered for adventure, designed for comfort. Explore the exterior and interior of our trusted sailing companion.' },
+  { id: 'vessel', label: 'Flagship Vessel', icon: Ship, subtitle: 'The Floating Sanctuary', desc: 'Engineered for adventure, designed for comfort. Explore the elegant exterior and luxurious interior of our trusted sailing companion.' },
   { id: 'kenawa', label: 'Kenawa Island', icon: Mountain, subtitle: 'The Hidden Savannah', desc: 'A breathtaking hike leading to a panoramic view of golden grasslands and a tropical sunset.' },
-  { id: 'whaleshark', label: 'Whale Sharks', icon: Waves, subtitle: 'Gentle Giants', desc: 'An unforgettable underwater experience swimming alongside the majestic and peaceful whale sharks.' },
+  { id: 'whaleshark', label: 'Whale Sharks', icon: Waves, subtitle: 'Gentle Giants', desc: 'An unforgettable underwater experience swimming alongside the majestic and peaceful whale sharks in Saleh Bay.' },
   { id: 'komodo', label: 'Komodo Island', icon: MapPin, subtitle: 'The Jurassic Realm', desc: 'Step into the wild and encounter the legendary Komodo dragons in their natural, protected habitat.' },
   { id: 'pinkbeach', label: 'Pink Beach', icon: MapPin, subtitle: 'Pristine Shores', desc: 'Relax on striking pink sands and snorkel in the crystal-clear turquoise waters teeming with marine life.' },
   { id: 'padar', label: 'Padar Island', icon: Mountain, subtitle: 'The Iconic Viewpoint', desc: 'A breathtaking hike leading to a panoramic view of three uniquely colored bays. The crown jewel of the archipelago.' },
@@ -67,7 +68,7 @@ interface MediaItem {
   createdAt?: any;
 }
 
-// Helper untuk menghasilkan pola grid yang dinamis
+// Helper untuk menghasilkan pola grid yang dinamis (Bento Grid Style)
 const getGridSpanClass = (index: number) => {
   const patternIndex = index % 7;
   switch (patternIndex) {
@@ -89,8 +90,10 @@ export default function GalleryPage() {
   // State untuk 3 gambar hero dinamis (diisi fallback default dulu)
   const [heroImages, setHeroImages] = useState<string[]>([imgWhaleShark, imgPadar, imgPinkBeach]);
 
-  const waNumber = "6287817865690";
-  const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20PMM%20Voyage,%20I%20saw%20your%20amazing%20gallery%20and%20want%20to%20book%20a%20trip!`;
+  // WA Formatting
+  const waNumber = CONTACT.PHONE_1.replace(/\D/g, '');
+  const encodedBrand = encodeURIComponent(BRAND_NAME);
+  const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20${encodedBrand},%20I%20saw%20your%20stunning%20gallery%20and%20wish%20to%20reserve%20an%20exclusive%20voyage!`;
 
   // Ambil data galeri dari Firestore "galleries"
   useEffect(() => {
@@ -136,9 +139,9 @@ export default function GalleryPage() {
   const editorialCategories = categories.filter(c => c.id !== 'all');
 
   return (
-    <main className="flex flex-col w-full bg-[#f8f9fa] min-h-screen overflow-x-hidden select-none">
+    <main className="flex flex-col w-full bg-[#f8f9fa] min-h-screen overflow-x-hidden select-none font-body">
       
-      {/* 1. HERO SECTION (FRESH: EXHIBITION STYLE) */}
+      {/* 1. HERO SECTION (EXHIBITION STYLE) */}
       <section className="relative pt-28 pb-16 md:pt-40 md:pb-32 px-5 md:px-12 bg-[#0f172a] overflow-hidden flex items-center min-h-[70vh] lg:min-h-[85vh]">
         {/* Subtle Background Glows */}
         <div className="absolute top-[-10%] left-[-10%] w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-[#B88E52]/10 rounded-full blur-[100px] md:blur-[120px] pointer-events-none"></div>
@@ -155,21 +158,21 @@ export default function GalleryPage() {
           >
             <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[#B88E52] text-[10px] md:text-xs font-bold mb-4 md:mb-6 backdrop-blur-md uppercase tracking-widest shadow-sm">
               <Images className="h-3.5 w-3.5" />
-              Exhibition Gallery
+              Visual Exhibition
             </motion.div>
             
-            <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6 tracking-tight leading-[1.15]">
+            <motion.h1 variants={fadeInUp} className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6 tracking-tight leading-[1.15]">
               Moments Captured, <br className="hidden sm:block" />
               <span className="italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-[#B88E52] to-[#eaddbd]">
-                Memories Made
+                Timeless Memories
               </span>
             </motion.h1>
             
             <motion.p variants={fadeInUp} className="text-base sm:text-lg md:text-xl text-white/70 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light mb-8 md:mb-10 px-4 lg:px-0">
-              A curated visual journey through the untamed beauty of the Indonesian archipelago. Explore the pristine waters, majestic wildlife, and unforgettable voyages.
+              A curated visual journey through the untamed beauty of the Indonesian archipelago. Explore the pristine waters, majestic wildlife, and unforgettable luxury voyages.
             </motion.p>
 
-            {/* Mobile Hero Collage (Tampil hanya di Mobile - Menggunakan Random Images) */}
+            {/* Mobile Hero Collage (Tampil hanya di Mobile) */}
             <motion.div variants={fadeInUp} className="flex lg:hidden justify-center gap-3 mb-8 w-full max-w-md mx-auto px-4">
                <div className="w-1/3 aspect-[3/4] rounded-2xl overflow-hidden mt-4 shadow-lg border border-white/10">
                  <img src={heroImages[0]} className="w-full h-full object-cover" alt="Gallery preview 1" />
@@ -185,14 +188,14 @@ export default function GalleryPage() {
             <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 px-5 lg:px-0 w-full">
                <button 
                   onClick={() => window.scrollTo({ top: window.innerHeight * 0.7, behavior: 'smooth' })}
-                  className="px-8 py-3.5 md:py-4 rounded-full bg-[#B88E52] hover:bg-[#a37c46] text-white font-bold text-base md:text-lg transition-all shadow-[0_4px_15px_rgba(184,142,82,0.3)] hover:-translate-y-1 w-full sm:w-auto"
+                  className="px-8 py-3.5 md:py-4 rounded-full bg-gradient-to-r from-[#B88E52] to-[#a37c46] hover:from-[#a37c46] hover:to-[#8c693b] text-white font-bold text-sm md:text-base uppercase tracking-widest transition-all shadow-[0_4px_15px_rgba(184,142,82,0.3)] hover:-translate-y-1 w-full sm:w-auto"
                >
-                  Explore Collection
+                 Explore Collection
                </button>
             </motion.div>
           </motion.div>
 
-          {/* Right Side: Floating Photo Stack (Hanya Desktop - Menggunakan Random Images) */}
+          {/* Right Side: Floating Photo Stack (Hanya Desktop) */}
           <motion.div 
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -240,7 +243,7 @@ export default function GalleryPage() {
                   setActiveTab(cat.id);
                   window.scrollTo({ top: window.innerHeight * 0.6, behavior: 'smooth' });
                 }}
-                className={`flex items-center gap-1.5 md:gap-2 px-5 md:px-6 py-2.5 md:py-3 rounded-full whitespace-nowrap transition-all duration-300 snap-center font-medium text-xs md:text-sm shadow-sm ${
+                className={`flex items-center gap-1.5 md:gap-2 px-5 md:px-6 py-2.5 md:py-3 rounded-full whitespace-nowrap transition-all duration-300 snap-center font-medium uppercase tracking-widest text-[10px] md:text-xs shadow-sm ${
                   isActive 
                     ? 'bg-[#0f172a] text-white transform md:scale-105' 
                     : 'bg-white text-gray-600 border border-gray-200 hover:border-[#B88E52] hover:text-[#B88E52]'
@@ -259,7 +262,7 @@ export default function GalleryPage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 md:py-32">
              <Loader2 className="w-10 h-10 md:w-12 md:h-12 text-[#B88E52] animate-spin mb-4" />
-             <p className="text-gray-500 font-medium text-sm md:text-base">Loading Visual Masterpieces...</p>
+             <p className="text-gray-500 font-medium text-sm md:text-base">Curating Visual Masterpieces...</p>
           </div>
         ) : (
           <>
@@ -267,15 +270,14 @@ export default function GalleryPage() {
             {reels.length > 0 && (
               <section className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-12 pt-12 md:pt-16 pb-6 md:pb-8 relative">
                 <div className="px-5 sm:px-0 mb-6 md:mb-8">
-                  <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a] flex items-center gap-2 md:gap-3">
-                    Trip Stories
-                    <span className="bg-red-500 text-white text-[9px] md:text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full animate-pulse">Hot</span>
+                  <h2 className="font-heading text-2xl md:text-3xl font-bold text-[#0f172a] flex items-center gap-2 md:gap-3">
+                    Cinematic Stories
+                    <span className="bg-[#B88E52] text-white text-[9px] md:text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full animate-pulse shadow-md">Hot</span>
                   </h2>
-                  <p className="text-gray-500 mt-1 md:mt-2 text-sm md:text-base">Breathtaking vertical moments from our recent voyages.</p>
+                  <p className="text-gray-500 mt-1 md:mt-2 text-sm md:text-base">Immersive vertical moments from our recent voyages.</p>
                 </div>
                 
                 <div className="relative">
-                  {/* Fade edge right to indicate scrollable content on mobile */}
                   <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#f8f9fa] to-transparent z-10 sm:hidden pointer-events-none"></div>
                   
                   <div className="flex overflow-x-auto no-scrollbar gap-4 md:gap-6 pb-6 snap-x scroll-smooth px-5 sm:px-0">
@@ -289,12 +291,12 @@ export default function GalleryPage() {
                           exit={{ opacity: 0, scale: 0.9 }}
                           transition={{ duration: 0.4 }}
                           onClick={() => setLightboxItem(reel)}
-                          className="relative shrink-0 w-52 sm:w-60 md:w-64 h-[340px] sm:h-[400px] md:h-[420px] rounded-2xl md:rounded-3xl overflow-hidden cursor-pointer group snap-center shadow-lg bg-gray-200"
+                          className="relative shrink-0 w-52 sm:w-60 md:w-64 h-[340px] sm:h-[400px] md:h-[420px] rounded-[1.5rem] md:rounded-[2rem] overflow-hidden cursor-pointer group snap-center shadow-lg bg-gray-200"
                           onContextMenu={(e) => e.preventDefault()}
                         >
                           <video 
                             src={reel.src} 
-                            className="w-full h-full object-cover transition-transform duration-700 md:group-hover:scale-110 pointer-events-none" 
+                            className="w-full h-full object-cover transition-transform duration-700 md:group-hover:scale-105 pointer-events-none" 
                             muted 
                             loop 
                             playsInline 
@@ -302,9 +304,8 @@ export default function GalleryPage() {
                             onContextMenu={(e) => e.preventDefault()}
                             controlsList="nodownload"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/90 via-transparent to-transparent opacity-80 md:group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/90 via-[#0f172a]/10 to-transparent opacity-80 md:group-hover:opacity-100 transition-opacity pointer-events-none"></div>
                           
-                          {/* Play Icon */}
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 backdrop-blur-md border border-white/40 rounded-full flex items-center justify-center text-white md:transform md:group-hover:scale-110 transition-transform shadow-xl">
                               <Play className="w-5 h-5 md:w-6 md:h-6 ml-1 fill-white" />
@@ -312,8 +313,8 @@ export default function GalleryPage() {
                           </div>
                           
                           <div className="absolute bottom-5 left-5 right-5 md:bottom-6 md:left-6 md:right-6 pointer-events-none">
-                            <h3 className="text-white font-bold text-base md:text-lg leading-tight mb-1 line-clamp-2">{reel.title}</h3>
-                            <p className="text-[#B88E52] text-[10px] md:text-xs font-semibold flex items-center gap-1 uppercase tracking-wider">
+                            <h3 className="font-heading text-white font-bold text-base md:text-lg leading-tight mb-1.5 line-clamp-2">{reel.title}</h3>
+                            <p className="text-[#B88E52] text-[10px] md:text-xs font-semibold flex items-center gap-1 uppercase tracking-widest">
                               <MapPin className="w-3 h-3" /> {reel.location}
                             </p>
                           </div>
@@ -351,33 +352,32 @@ export default function GalleryPage() {
                           {/* Text Block */}
                           <div className="w-full lg:w-1/3">
                             <motion.div variants={fadeInUp} className="lg:sticky lg:top-40">
-                              <div className="w-12 h-12 md:w-14 md:h-14 rounded-[1rem] md:rounded-2xl bg-[#fdfaf5] border border-[#B88E52]/20 flex items-center justify-center mb-4 md:mb-6 shadow-sm">
+                              <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#fdfaf5] border border-[#B88E52]/20 flex items-center justify-center mb-4 md:mb-6 shadow-sm">
                                 <cat.icon className="w-5 h-5 md:w-6 md:h-6 text-[#B88E52]" />
                               </div>
-                              <span className="text-[#B88E52] font-semibold tracking-wider uppercase text-xs md:text-sm mb-1.5 md:mb-2 block">
+                              <span className="text-[#B88E52] font-semibold tracking-widest uppercase text-xs md:text-sm mb-1.5 md:mb-2 block">
                                 {cat.subtitle}
                               </span>
-                              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#0f172a] mb-3 md:mb-5">
+                              <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-bold text-[#0f172a] mb-3 md:mb-5">
                                 {cat.label}
                               </h2>
-                              <p className="text-gray-600 text-sm md:text-base lg:text-lg leading-relaxed mb-4 md:mb-8 pr-4 md:pr-0">
+                              <p className="text-gray-600 text-sm md:text-base lg:text-lg leading-relaxed mb-4 md:mb-8 pr-4 md:pr-0 font-light">
                                 {cat.desc}
                               </p>
                               
-                              {/* CTA Button Khusus Desktop (Hidden di Mobile) */}
                               <button 
                                 onClick={() => {
                                   setActiveTab(cat.id);
                                   window.scrollTo({ top: window.innerHeight * 0.5, behavior: 'smooth' });
                                 }}
-                                className="hidden lg:inline-flex group items-center gap-2 text-[#0f172a] font-bold border-b-2 border-[#0f172a] pb-1 hover:text-[#B88E52] hover:border-[#B88E52] transition-colors text-sm md:text-base"
+                                className="hidden lg:inline-flex group items-center gap-2 text-[#0f172a] font-bold border-b-2 border-[#0f172a] pb-1 hover:text-[#B88E52] hover:border-[#B88E52] transition-colors text-sm md:text-xs uppercase tracking-widest"
                               >
-                                Explore More Photos <ArrowRight className="w-4 h-4 transform md:group-hover:translate-x-1 transition-transform" />
+                                View Collection <ArrowRight className="w-4 h-4 transform md:group-hover:translate-x-1 transition-transform" />
                               </button>
                             </motion.div>
                           </div>
 
-                          {/* Image Grid Block */}
+                          {/* BENTO GRID BLOCK */}
                           <div className="w-full lg:w-2/3 flex flex-col">
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 lg:gap-6 auto-rows-[120px] sm:auto-rows-[160px] md:auto-rows-[200px] grid-flow-dense">
                               {catImages.map((image, imgIdx) => {
@@ -389,24 +389,24 @@ export default function GalleryPage() {
                                     variants={fadeInUp}
                                     onClick={() => setLightboxItem(image)}
                                     onContextMenu={(e) => e.preventDefault()}
-                                    className={`relative overflow-hidden rounded-[1rem] md:rounded-[1.5rem] lg:rounded-[2rem] group cursor-pointer bg-gray-200 shadow-md ${spanClass}`}
+                                    className={`relative overflow-hidden rounded-[1rem] md:rounded-[1.5rem] lg:rounded-3xl group cursor-pointer bg-gray-200 shadow-md hover:shadow-xl transition-all ${spanClass}`}
                                   >
                                     <img
                                       src={image.src}
                                       alt={image.title}
                                       draggable={false}
                                       onContextMenu={(e) => e.preventDefault()}
-                                      className="w-full h-full object-cover transition-transform duration-700 md:group-hover:scale-110 pointer-events-none"
+                                      className="w-full h-full object-cover transition-transform duration-1000 md:group-hover:scale-105 pointer-events-none"
                                     />
                                     <div className="absolute inset-0 bg-[#0f172a]/20 md:bg-[#0f172a]/40 opacity-0 md:group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                                     
-                                    <div className="md:hidden absolute bottom-2 right-2 bg-white/80 backdrop-blur-sm p-1.5 rounded-full shadow-sm pointer-events-none">
+                                    <div className="md:hidden absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm pointer-events-none">
                                        <Images className="w-3.5 h-3.5 text-[#0f172a]" />
                                     </div>
 
                                     <div className="hidden md:flex absolute inset-0 flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 p-4 text-center pointer-events-none">
-                                      <span className="bg-white/90 backdrop-blur-sm text-[#0f172a] font-bold text-sm uppercase tracking-widest px-6 py-2.5 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
-                                        Expand
+                                      <span className="bg-white/95 backdrop-blur-sm text-[#0f172a] font-bold text-xs uppercase tracking-widest px-6 py-3 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                                        Expand Image
                                       </span>
                                     </div>
                                   </motion.div>
@@ -414,16 +414,15 @@ export default function GalleryPage() {
                               })}
                             </div>
                             
-                            {/* CTA Button Khusus Mobile (Tampil di bawah Grid Gambar) */}
                             <motion.div variants={fadeInUp} className="lg:hidden w-full flex justify-start mt-6">
                               <button 
                                 onClick={() => {
                                   setActiveTab(cat.id);
                                   window.scrollTo({ top: window.innerHeight * 0.5, behavior: 'smooth' });
                                 }}
-                                className="group inline-flex items-center gap-2 text-[#0f172a] font-bold border-b-2 border-[#0f172a] pb-1 hover:text-[#B88E52] hover:border-[#B88E52] transition-colors text-sm"
+                                className="group inline-flex items-center gap-2 text-[#0f172a] font-bold border-b-2 border-[#0f172a] pb-1 hover:text-[#B88E52] hover:border-[#B88E52] transition-colors text-xs uppercase tracking-widest"
                               >
-                                Explore More Photos <ArrowRight className="w-4 h-4 transform transition-transform" />
+                                View Collection <ArrowRight className="w-4 h-4 transform transition-transform" />
                               </button>
                             </motion.div>
 
@@ -445,10 +444,10 @@ export default function GalleryPage() {
                 className="max-w-7xl mx-auto w-full px-5 md:px-6 lg:px-12 py-10 md:py-16 space-y-8 md:space-y-12"
               >
                 <div className="mb-6 md:mb-8 border-b border-gray-200 pb-6 md:pb-8">
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#0f172a]">
+                  <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold text-[#0f172a]">
                     {categories.find(c => c.id === activeTab)?.label} Gallery
                   </h2>
-                  <p className="text-gray-500 mt-2 text-sm md:text-lg">Browse all captured moments for this destination.</p>
+                  <p className="text-gray-500 mt-2 text-sm md:text-lg font-light">Browse all captured moments for this destination.</p>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 auto-rows-[140px] sm:auto-rows-[180px] md:auto-rows-[250px] grid-flow-dense">
@@ -463,27 +462,26 @@ export default function GalleryPage() {
                         transition={{ duration: 0.4 }}
                         onClick={() => setLightboxItem(image)}
                         onContextMenu={(e) => e.preventDefault()}
-                        className={`break-inside-avoid relative rounded-[1rem] md:rounded-[1.5rem] overflow-hidden cursor-pointer group shadow-sm bg-gray-200 ${spanClass}`}
+                        className={`break-inside-avoid relative rounded-[1rem] md:rounded-[1.5rem] overflow-hidden cursor-pointer group shadow-sm hover:shadow-xl transition-all bg-gray-200 ${spanClass}`}
                       >
                         <img 
                           src={image.src} 
                           alt={image.title} 
                           draggable={false}
                           onContextMenu={(e) => e.preventDefault()}
-                          className="w-full h-full object-cover transition-transform duration-700 md:group-hover:scale-105 pointer-events-none"
+                          className="w-full h-full object-cover transition-transform duration-1000 md:group-hover:scale-105 pointer-events-none"
                           loading="lazy"
                         />
-                        {/* Gradient Text Desktop & Mobile */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/80 via-transparent to-transparent opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 md:p-5 lg:p-6 pointer-events-none">
-                          <div className="transform translate-y-0 md:translate-y-4 md:group-hover:translate-y-0 transition-transform duration-300">
-                            <h3 className="text-white font-bold text-sm md:text-base lg:text-lg mb-0.5 md:mb-1 line-clamp-1">{image.title}</h3>
-                            <div className="flex flex-col gap-0.5 md:gap-1">
-                              <p className="text-[#B88E52] text-[10px] md:text-xs lg:text-sm flex items-center gap-1 font-semibold uppercase tracking-wider">
-                                <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5" /> {image.location}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/90 via-[#0f172a]/20 to-transparent opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-4 md:p-5 lg:p-6 pointer-events-none">
+                          <div className="transform translate-y-0 md:translate-y-4 md:group-hover:translate-y-0 transition-transform duration-500">
+                            <h3 className="font-heading text-white font-bold text-sm md:text-base lg:text-lg mb-1 line-clamp-1">{image.title}</h3>
+                            <div className="flex flex-col gap-1">
+                              <p className="text-[#B88E52] text-[10px] md:text-xs font-semibold uppercase tracking-widest flex items-center gap-1.5">
+                                <MapPin className="w-3 h-3" /> {image.location}
                               </p>
                               {image.tripName && (
-                                <p className="text-gray-300 text-[9px] md:text-[10px] lg:text-xs flex items-center gap-1 line-clamp-1">
-                                  <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3 shrink-0" /> {image.tripName}
+                                <p className="text-gray-300 text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-1.5 line-clamp-1 mt-1">
+                                  <Calendar className="w-3 h-3 shrink-0" /> {image.tripName}
                                 </p>
                               )}
                             </div>
@@ -500,7 +498,7 @@ export default function GalleryPage() {
             {filteredMedia.length === 0 && (
               <div className="max-w-7xl mx-auto w-full px-6 lg:px-12 py-24 md:py-32 text-center">
                 <Camera className="w-12 h-12 md:w-16 md:h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl md:text-2xl font-bold text-[#0f172a]">Moments are being prepared...</h3>
+                <h3 className="font-heading text-xl md:text-2xl font-bold text-[#0f172a]">Moments are being prepared...</h3>
                 <p className="text-gray-500 mt-2 text-sm md:text-base">Our crew is currently capturing amazing moments for this destination.</p>
               </div>
             )}
@@ -523,21 +521,21 @@ export default function GalleryPage() {
           variants={fadeInUp}
           className="relative z-10 max-w-4xl mx-auto text-center bg-white/5 backdrop-blur-md border border-white/20 p-8 md:p-12 lg:p-16 rounded-[2rem] md:rounded-[3rem] shadow-2xl pointer-events-auto"
         >
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-[#B88E52] rounded-full flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-lg">
+          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-[#B88E52] to-[#a37c46] rounded-full flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-lg">
             <Camera className="w-6 h-6 md:w-8 md:h-8 text-white" />
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 md:mb-6 leading-tight">Be Part of the Story</h2>
+          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 md:mb-6 leading-tight">Be Part of the Story</h2>
           <p className="text-white/80 mb-8 md:mb-10 text-sm md:text-lg max-w-2xl mx-auto leading-relaxed font-light px-2 md:px-0">
-            These pictures could be you. Join our next departure and experience the authentic Komodo & Sumbawa adventure. Your masterpiece awaits.
+            These pictures could be you. Join our next departure and experience the authentic luxury of Komodo. Your masterpiece awaits.
           </p>
           <a 
             id="btn-wa-booking"
             href={b2cWaLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 md:gap-3 px-8 py-4 rounded-full bg-white hover:bg-gray-100 text-[#0f172a] font-bold text-base md:text-lg transition-all shadow-xl hover:shadow-2xl md:hover:-translate-y-1 w-full sm:w-auto"
+            className="inline-flex items-center justify-center gap-2 md:gap-3 px-8 py-4 rounded-full bg-white hover:bg-gray-100 text-[#0f172a] font-bold text-xs md:text-sm uppercase tracking-widest transition-all shadow-xl hover:shadow-2xl md:hover:-translate-y-1 w-full sm:w-auto"
           >
-            Book Your Voyage <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
+            Reserve Your Voyage <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
           </a>
         </motion.div>
       </section>
@@ -579,7 +577,7 @@ export default function GalleryPage() {
                      controlsList="nodownload"
                      onContextMenu={(e) => e.preventDefault()}
                    />
-                   <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-black/60 to-transparent pointer-events-none"></div>
+                   <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-[#0f172a]/80 to-transparent pointer-events-none"></div>
                  </div>
               ) : (
                 <div className="relative w-full h-full flex flex-col items-center justify-center p-4">
@@ -590,9 +588,9 @@ export default function GalleryPage() {
                     onContextMenu={(e) => e.preventDefault()}
                     className="max-w-full max-h-[75vh] md:max-h-[80vh] object-contain rounded-lg shadow-2xl pointer-events-none"
                   />
-                  <div className="mt-4 md:mt-6 text-center bg-black/40 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none p-4 sm:p-0 rounded-xl sm:rounded-none w-full sm:w-auto absolute bottom-4 sm:relative">
-                    <h3 className="text-white text-lg md:text-2xl font-bold leading-tight">{lightboxItem.title}</h3>
-                    <p className="text-[#B88E52] mt-1 md:mt-2 flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm font-semibold uppercase tracking-wider">
+                  <div className="mt-4 md:mt-6 text-center bg-[#0f172a]/80 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none p-4 sm:p-0 rounded-xl sm:rounded-none w-full sm:w-auto absolute bottom-4 sm:relative">
+                    <h3 className="font-heading text-white text-lg md:text-2xl font-bold leading-tight">{lightboxItem.title}</h3>
+                    <p className="text-[#B88E52] mt-1 md:mt-2 flex items-center justify-center gap-1 md:gap-2 text-[10px] md:text-xs font-semibold uppercase tracking-widest">
                       <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4"/> {lightboxItem.location}
                     </p>
                   </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { collection, query, where, orderBy, getDocs, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { BRAND_NAME, CONTACT } from "@/lib/constants";
 import { ArrowRight, Compass, ShieldCheck, Ship, Users, Star, Quote, Anchor, HeartHandshake, MapPin, CheckCircle2, Loader2, MessageSquare, ChevronLeft, X } from "lucide-react";
 import { motion, Variants, AnimatePresence } from "framer-motion";
 
@@ -27,12 +28,12 @@ const offerings = [
   {
     category: "Sailing Experiences",
     items: [
-      "Shared Expedition Trips",
-      "Private Yacht Charters",
-      "Standard & Deluxe Packages",
-      "Premium Liveaboard Journeys",
+      "Exclusive Shared Expeditions",
+      "Private Luxury Yacht Charters",
+      "Standard to Premium Packages",
+      "Bespoke Liveaboard Journeys",
       "Whale Shark Encounters",
-      "Snorkeling & Marine Safaris"
+      "Guided Marine Safaris"
     ]
   },
   {
@@ -78,14 +79,15 @@ export default function AboutUsPage() {
 
   const reviewSliderRef = useRef<HTMLDivElement>(null);
 
-  const waNumber = "6287817865690";
-  const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20PGI%20Voyage,%20I%20am%20interested%20in%20booking%20an%20unforgettable%20sailing%20adventure!`;
+  // Format WA link menggunakan data dari constants
+  const waNumber = CONTACT.PHONE_1.replace(/\D/g, '');
+  const encodedBrand = encodeURIComponent(BRAND_NAME);
+  const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20${encodedBrand},%20I%20am%20interested%20in%20booking%20an%20unforgettable%20luxury%20sailing%20adventure!`;
 
   // Fetch data dari Firestore untuk Testimonial (Review)
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        // Ambil 6 review approved terbaru
         const q = query(
           collection(db, 'reviews'),
           where('status', '==', 'approved'),
@@ -122,7 +124,7 @@ export default function AboutUsPage() {
   };
 
   return (
-    <main className="flex flex-col w-full bg-[#f8f9fa] overflow-x-hidden">
+    <main className="flex flex-col w-full bg-[#f8f9fa] overflow-x-hidden font-body">
       
       {/* 1. HERO SECTION */}
       <section className="relative pt-28 pb-32 md:pt-40 md:pb-48 lg:pt-48 lg:pb-56 px-5 md:px-12 bg-[#0f172a] overflow-hidden flex flex-col items-center justify-center">
@@ -142,11 +144,11 @@ export default function AboutUsPage() {
             <Anchor className="h-3.5 w-3.5 md:h-4 md:w-4" />
             Our Story
           </motion.div>
-          <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6 drop-shadow-md leading-[1.15] tracking-tight px-2">
+          <motion.h1 variants={fadeInUp} className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6 drop-shadow-md leading-[1.15] tracking-tight px-2">
             Redefining <br className="hidden sm:block" /> <span className="italic font-serif text-[#B88E52]">Ocean Adventures</span>
           </motion.h1>
           <motion.p variants={fadeInUp} className="text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed px-4 md:px-0 font-light">
-            Welcome to PGI Voyage, a trusted maritime platform dedicated to orchestrating unforgettable liveaboard experiences across the majestic Indonesian archipelago.
+            Welcome to {BRAND_NAME}, a trusted maritime platform dedicated to orchestrating unforgettable luxury liveaboard experiences across the majestic Indonesian archipelago.
           </motion.p>
         </motion.div>
       </section>
@@ -163,27 +165,27 @@ export default function AboutUsPage() {
           >
             {/* KIRI: Judul, Paragraf, dan Gambar Mobile */}
             <motion.div variants={fadeInUp} className="w-full lg:w-1/2 flex flex-col">
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172a] mb-4 md:mb-6 leading-tight">Our Mission & <br className="hidden lg:block"/> Identity</h2>
-              <div className="w-16 md:w-20 h-1 md:h-1.5 bg-[#B88E52] mb-6 md:mb-8 rounded-full"></div>
+              <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172a] mb-4 md:mb-6 leading-tight">Our Mission & <br className="hidden lg:block"/> Identity</h2>
+              <div className="w-16 md:w-20 h-1 md:h-1.5 bg-gradient-to-r from-[#B88E52] to-[#a37c46] mb-6 md:mb-8 rounded-full"></div>
               
               {/* GAMBAR KAPAL KHUSUS MOBILE (Muncul setelah Judul) */}
               <div className="w-full relative mb-8 lg:hidden">
                 <div className="aspect-[4/5] sm:aspect-square rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden shadow-inner bg-gray-100">
                   <img 
                     src="https://res.cloudinary.com/danyx7uny/image/upload/v1781582217/obuwude82h22wr1wvscz.png" 
-                    alt="KM Pulau Mas 88 - PGI Voyage Phinisi Liveaboard Vessel" 
+                    alt={`KM Pulau Mas 88 - ${BRAND_NAME} Flagship Vessel`} 
                     className="w-full h-full object-cover transition-transform duration-1000 hover:scale-105"
                   />
                 </div>
                 {/* Decorative Element Mobile/Tablet */}
                 <div className="absolute -bottom-5 -left-5 bg-[#0f172a] text-white p-5 rounded-[1.5rem] shadow-xl hidden sm:block border border-[#1e293b]">
                   <Compass className="w-8 h-8 text-[#B88E52] mb-2" />
-                  <p className="font-bold text-base leading-tight">Explore with<br/>Confidence</p>
+                  <p className="font-heading font-bold text-base leading-tight">Explore with<br/>Elegance</p>
                 </div>
               </div>
 
               <p className="text-gray-600 text-sm sm:text-base md:text-lg leading-relaxed mb-4 md:mb-6">
-                We are driven by a profound passion for the sea, tropical islands, and the art of crafting meaningful travel narratives. Our singular mission is to help global explorers discover the raw, untamed beauty of Indonesia's iconic islands through sailing journeys that prioritize ultimate safety and profound joy.
+                We are driven by a profound passion for the sea, tropical islands, and the art of crafting meaningful travel narratives. Our singular mission is to help global explorers discover the raw, untamed beauty of Indonesia's iconic islands through exclusive sailing journeys that prioritize ultimate safety, personalized service, and profound joy.
               </p>
               <p className="text-gray-600 text-sm sm:text-base md:text-lg leading-relaxed">
                 Whether you are embarking on a solo quest, celebrating with a partner, or creating memories with family and friends, we curate the perfect equilibrium of adrenaline-fueled adventure and serene comfort, tailored specifically for you.
@@ -195,14 +197,14 @@ export default function AboutUsPage() {
               <div className="aspect-square rounded-[2.5rem] overflow-hidden shadow-inner bg-gray-100">
                 <img 
                   src="https://res.cloudinary.com/danyx7uny/image/upload/v1781582217/obuwude82h22wr1wvscz.png" 
-                  alt="KM Pulau Mas 88 - PGI Voyage Phinisi Liveaboard Vessel" 
+                  alt={`KM Pulau Mas 88 - ${BRAND_NAME} Flagship Vessel`} 
                   className="w-full h-full object-cover transition-transform duration-1000 hover:scale-105"
                 />
               </div>
               {/* Decorative Element Desktop */}
               <div className="absolute -bottom-8 -left-8 bg-[#0f172a] text-white p-8 rounded-[2rem] shadow-xl border border-[#1e293b]">
                 <Compass className="w-12 h-12 text-[#B88E52] mb-3" />
-                <p className="font-bold text-xl leading-tight">Explore with<br/>Confidence</p>
+                <p className="font-heading font-bold text-xl leading-tight">Explore with<br/>Elegance</p>
               </div>
             </motion.div>
           </motion.div>
@@ -216,8 +218,8 @@ export default function AboutUsPage() {
 
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-10 md:mb-16">
-            <span className="text-[#B88E52] font-semibold tracking-wider uppercase text-xs md:text-sm mb-2 block">Why Choose Us</span>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172a] mb-4 md:mb-6">The PGI Voyage Standard</h2>
+            <span className="text-[#B88E52] font-semibold tracking-widest uppercase text-xs md:text-sm mb-2 block">Why Choose Us</span>
+            <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172a] mb-4 md:mb-6">The {BRAND_NAME} Standard</h2>
             <p className="text-gray-600 max-w-2xl mx-auto text-sm md:text-lg leading-relaxed px-4 md:px-0">We elevate industry standards by merging meticulous planning with a deep respect for maritime safety.</p>
           </div>
 
@@ -226,7 +228,6 @@ export default function AboutUsPage() {
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
             variants={staggerContainer}
-            // Diubah menjadi flex overflow untuk Mobile agar tidak kepanjangan ke bawah
             className="flex overflow-x-auto lg:grid lg:grid-cols-4 gap-4 md:gap-8 pb-6 lg:pb-0 snap-x no-scrollbar -mx-5 px-5 lg:mx-0 lg:px-0"
           >
             {features.map((feat, index) => (
@@ -238,7 +239,7 @@ export default function AboutUsPage() {
                 <div className="h-12 w-12 md:h-16 md:w-16 bg-white rounded-xl md:rounded-2xl shadow-sm border border-[#B88E52]/10 flex items-center justify-center mb-5 md:mb-6 shrink-0">
                   {feat.icon}
                 </div>
-                <h3 className="text-lg md:text-xl font-bold text-[#0f172a] mb-3 md:mb-4 leading-snug">{feat.title}</h3>
+                <h3 className="font-heading text-lg md:text-xl font-bold text-[#0f172a] mb-3 md:mb-4 leading-snug">{feat.title}</h3>
                 <p className="text-gray-600 leading-relaxed text-xs md:text-sm">{feat.desc}</p>
               </motion.div>
             ))}
@@ -261,7 +262,7 @@ export default function AboutUsPage() {
           >
             {offerings.map((offer, index) => (
               <motion.div key={index} variants={fadeInUp} className="space-y-6 md:space-y-8 bg-white/5 p-6 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 backdrop-blur-sm">
-                <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3 md:gap-4">
+                <h2 className="font-heading text-2xl md:text-3xl font-bold text-white flex items-center gap-3 md:gap-4">
                   {index === 0 ? <Ship className="w-6 h-6 md:w-8 md:h-8 text-[#B88E52]" /> : <MapPin className="w-6 h-6 md:w-8 md:h-8 text-[#B88E52]" />}
                   {offer.category}
                 </h2>
@@ -271,7 +272,7 @@ export default function AboutUsPage() {
                       <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#B88E52]/20 border border-[#B88E52]/50 flex items-center justify-center shrink-0">
                         <CheckCircle2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#B88E52]" />
                       </div>
-                      <span className="font-medium">{item}</span>
+                      <span className="font-medium tracking-wide">{item}</span>
                     </li>
                   ))}
                 </ul>
@@ -281,13 +282,13 @@ export default function AboutUsPage() {
         </div>
       </section>
 
-      {/* 5. TESTIMONIALS SECTION (DENGAN SLIDER DAN FOTO SAMA SEPERTI DI HOMEPAGE) */}
+      {/* 5. TESTIMONIALS SECTION */}
       <section className="py-16 md:py-24 px-5 md:px-12 bg-[#f8f9fa] border-b border-gray-100 relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-16 gap-6">
             <div>
-              <span className="text-[#B88E52] font-semibold tracking-wider uppercase text-xs md:text-sm mb-2 block">Social Proof</span>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172a] mb-4 md:mb-6">Voices of Our Explorers</h2>
+              <span className="text-[#B88E52] font-semibold tracking-widest uppercase text-xs md:text-sm mb-2 block">Social Proof</span>
+              <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172a] mb-4 md:mb-6">Voices of Our Explorers</h2>
               <p className="text-gray-600 max-w-2xl text-base md:text-lg">Read authentic experiences from travelers who joined our Komodo sailing trips and explored unforgettable liveaboard adventures.</p>
             </div>
             
@@ -339,17 +340,15 @@ export default function AboutUsPage() {
                     <Quote className="absolute top-6 right-6 md:top-8 md:right-8 w-16 h-16 md:w-20 md:h-20 text-[#B88E52]/10 rotate-180 pointer-events-none" />
                     
                     <div className="flex gap-1 text-[#B88E52] mb-4 md:mb-6 relative z-10">
-                      {/* Render bintang dari Firebase */}
                       {[...Array(testi.rating || 5)].map((_, i) => <Star key={i} className={`w-4 h-4 md:w-5 md:h-5 ${i < (testi.rating || 5) ? 'fill-[#B88E52] text-[#B88E52]' : 'fill-transparent text-gray-300'}`} />)}
                     </div>
                     
                     <p className="text-gray-700 text-base md:text-lg leading-relaxed relative z-10 italic font-light line-clamp-4">
                       "{testi.review || testi.text}"
                     </p>
-                    <span className="text-[#B88E52] text-xs md:text-sm font-bold mt-2 mb-4 block group-hover:underline">Read full story...</span>
+                    <span className="text-[#B88E52] text-xs md:text-sm font-bold mt-2 mb-4 block group-hover:underline uppercase tracking-widest">Read full story...</span>
 
                     <div className="mt-auto flex flex-col gap-3 md:gap-4 relative z-10">
-                      {/* Tampilkan foto review jika ada */}
                       {testi.image && (
                         <div className="w-full h-24 md:h-32 rounded-xl md:rounded-2xl overflow-hidden shadow-sm border border-gray-100 shrink-0">
                           <img src={testi.image} alt="Guest Moment" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
@@ -362,7 +361,7 @@ export default function AboutUsPage() {
                         </div>
                         <div>
                           <h4 className="font-bold text-[#0f172a] text-sm md:text-base leading-tight">{testi.name || 'Guest'}</h4>
-                          <span className="text-[10px] md:text-xs text-gray-500 uppercase tracking-wider font-semibold">{testi.origin || testi.country || 'Global Traveler'}</span>
+                          <span className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest font-semibold">{testi.origin || testi.country || 'Global Traveler'}</span>
                         </div>
                       </div>
                     </div>
@@ -371,43 +370,10 @@ export default function AboutUsPage() {
               </div>
             </div>
           )}
-
-          <div className="text-center mt-8 md:mt-12">
-             <a href="/review" className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-3.5 rounded-full bg-white border border-[#B88E52]/40 text-[#0f172a] font-bold hover:bg-[#B88E52] hover:text-white transition-all shadow-sm hover:shadow-md w-full sm:w-auto text-sm md:text-base">
-                Share Your Experience <ArrowRight className="w-4 h-4" />
-             </a>
-          </div>
         </div>
       </section>
 
-      {/* 6. FINAL CTA SECTION */}
-      <section className="py-16 md:py-24 px-5 md:px-6 text-center bg-white border-t border-gray-100">
-        <motion.div 
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={fadeInUp}
-          className="max-w-4xl mx-auto bg-[#0f172a] rounded-[2rem] md:rounded-[3rem] p-8 md:p-12 lg:p-16 shadow-2xl relative overflow-hidden"
-        >
-           <div className="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-[#B88E52]/20 rounded-full blur-3xl pointer-events-none"></div>
-           <div className="absolute bottom-0 left-0 w-32 h-32 md:w-48 md:h-48 bg-[#B88E52]/10 rounded-full blur-2xl pointer-events-none"></div>
-           
-           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 md:mb-6 relative z-10 leading-tight">Begin Your Epic Journey</h2>
-           <p className="text-gray-300 mb-8 md:mb-10 text-sm md:text-lg relative z-10 max-w-xl mx-auto leading-relaxed font-light px-2 md:px-0">
-             Explore breathtaking islands, crystal-clear waters, and unparalleled luxury aboard our curated fleet.
-           </p>
-           <a 
-              href={b2cWaLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 md:gap-3 px-8 py-4 md:px-10 md:py-5 rounded-full bg-[#B88E52] hover:bg-[#a37c46] text-white font-bold text-base md:text-lg transition-all shadow-[0_0_20px_rgba(184,142,82,0.3)] md:shadow-[0_0_30px_rgba(184,142,82,0.4)] transform hover:scale-105 relative z-10 w-full sm:w-auto"
-            >
-              Consult an Expert <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
-            </a>
-        </motion.div>
-      </section>
-
-      {/* FULLSCREEN REVIEW MODAL (LIGHTBOX) DENGAN BALASAN ADMIN */}
+      {/* FULLSCREEN REVIEW MODAL */}
       <AnimatePresence>
         {selectedReview && (
           <motion.div 
@@ -431,7 +397,7 @@ export default function AboutUsPage() {
                 <X className="w-4 h-4 md:w-5 md:h-5" />
               </button>
 
-              {/* Kiri: Foto Momen (Menggunakan object-contain & blur backdrop) */}
+              {/* Kiri: Foto Momen */}
               {selectedReview.image && (
                 <div className="w-full h-64 sm:h-72 md:h-auto md:w-2/5 shrink-0 bg-[#f8f9fa] relative flex items-center justify-center overflow-hidden">
                   <div 
@@ -455,7 +421,7 @@ export default function AboutUsPage() {
                   </div>
                   <div>
                     <h4 className="font-bold text-[#0f172a] text-base md:text-lg leading-tight">{selectedReview.name}</h4>
-                    <div className="flex items-center gap-2 text-[10px] md:text-xs text-gray-500 uppercase tracking-wider font-semibold mt-0.5 md:mt-1">
+                    <div className="flex items-center gap-2 text-[10px] md:text-xs text-gray-500 uppercase tracking-widest font-semibold mt-0.5 md:mt-1">
                       <span>{selectedReview.origin || selectedReview.country}</span>
                     </div>
                     <div className="flex gap-1 mt-1 md:mt-1.5">
@@ -479,8 +445,8 @@ export default function AboutUsPage() {
                          <Ship className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#B88E52]" />
                       </div>
                       <div>
-                         <span className="block font-bold text-[#0f172a] text-xs md:text-sm tracking-wide">PMM Voyage Team</span>
-                         <span className="block text-[9px] md:text-[10px] text-gray-500 uppercase tracking-wider">Official Reply</span>
+                         <span className="block font-bold text-[#0f172a] text-xs md:text-sm tracking-wide">{BRAND_NAME} Team</span>
+                         <span className="block text-[9px] md:text-[10px] text-gray-500 uppercase tracking-widest">Official Reply</span>
                       </div>
                     </div>
                     <p className="text-gray-700 text-xs sm:text-sm md:text-base leading-relaxed whitespace-pre-wrap pl-9 md:pl-11">
