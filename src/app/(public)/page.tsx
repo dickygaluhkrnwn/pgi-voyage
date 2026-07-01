@@ -93,13 +93,12 @@ const defaultReviews = [
 ];
 
 const defaultItineraryFallback = [
-  { day: "DAY 1", title: "Departure & Secret Islands", image: "https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=1973&auto=format&fit=crop" },
-  { day: "DAY 2", title: "Whale Sharks & Tambora", image: "https://images.unsplash.com/photo-1580580297368-c782fb65d271?q=80&w=1974&auto=format&fit=crop" },
-  { day: "DAY 3", title: "Komodo & Padar Excursion", image: "https://images.unsplash.com/photo-1717238977683-5f06a9e60694?q=80&w=1970&auto=format&fit=crop" },
-  { day: "DAY 4", title: "Majarite, Kelor & Return", image: "https://images.unsplash.com/photo-1724127722795-96efb9caffbc?q=80&w=1929&auto=format&fit=crop" }
+  { day: "DAY 1 • SATURDAY", title: "Departure & Secret Islands", image: "https://images.unsplash.com/photo-1604560929658-bbc3c2ba6a36?q=80&w=1973&auto=format&fit=crop" },
+  { day: "DAY 2 • SUNDAY", title: "Whale Sharks & Tambora", image: "https://images.unsplash.com/photo-1580580297368-c782fb65d271?q=80&w=1974&auto=format&fit=crop" },
+  { day: "DAY 3 • MONDAY", title: "Komodo & Padar Excursion", image: "https://images.unsplash.com/photo-1717238977683-5f06a9e60694?q=80&w=1970&auto=format&fit=crop" },
+  { day: "DAY 4 • TUESDAY", title: "Majarite, Kelor & Return", image: "https://images.unsplash.com/photo-1724127722795-96efb9caffbc?q=80&w=1929&auto=format&fit=crop" }
 ];
 
-// Helper to strip HTML tags
 const stripHtml = (html: string) => {
   if (typeof window === 'undefined') return html;
   const tmp = document.createElement("DIV");
@@ -113,7 +112,6 @@ export default function PublicHomepage() {
   const b2cWaLink = `https://wa.me/${waNumber}?text=Hi%20${encodedBrand},%20I%20want%20to%20book%20the%20exclusive%204D3N%20Expedition!`;
   const b2bWaLink = `https://wa.me/${waNumber}?text=Hello%20${encodedBrand},%20I%20am%20a%20Travel%20Agent%20interested%20in%20joining%20the%20B2B%20Portal%20for%20the%20Allotment%20&%20Commission%20system.`;
   
-  // Dynamic States
   const sliderRef = useRef<HTMLDivElement>(null);
   const reviewSliderRef = useRef<HTMLDivElement>(null);
   
@@ -127,10 +125,8 @@ export default function PublicHomepage() {
   const [isLoadingReviews, setIsLoadingReviews] = useState(true);
   const [isLoadingItinerary, setIsLoadingItinerary] = useState(true);
 
-  // Review Modal State
   const [selectedReview, setSelectedReview] = useState<any | null>(null);
 
-  // Parallax for Hero
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, 150]);
   const heroOpacity = useTransform(scrollY, [0, 300], [1, 0.2]);
@@ -146,14 +142,20 @@ export default function PublicHomepage() {
     }
   };
 
-  // Fetch Data Effects
   useEffect(() => {
     const fetchItinerary = async () => {
       try {
         const docRef = doc(db, 'settings', 'expedition');
         const docSnap = await getDoc(docRef);
         if (docSnap.exists() && docSnap.data().itinerary && docSnap.data().itinerary.length > 0) {
-          setItinerary(docSnap.data().itinerary.slice(0, 4));
+          const mappedItinerary = docSnap.data().itinerary.map((it: any, index: number) => {
+             const daysMap = ["SATURDAY", "SUNDAY", "MONDAY", "TUESDAY"];
+             return {
+                ...it,
+                day: it.day || `DAY ${index + 1} • ${daysMap[index % 4]}`
+             };
+          });
+          setItinerary(mappedItinerary.slice(0, 4));
         } else {
           setItinerary(defaultItineraryFallback);
         }
@@ -300,10 +302,12 @@ export default function PublicHomepage() {
             </span>
           </motion.h1>
           
-          <motion.p variants={fadeInUp} className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/80 mb-8 md:mb-12 max-w-2xl lg:max-w-3xl mx-auto leading-relaxed font-light drop-shadow-md px-4">
-            An intimate journey from Lombok to Flores. 
-            Fixed departures every Monday. Strictly limited to privileged guests.
-          </motion.p>
+          <motion.div variants={fadeInUp} className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/80 mb-8 md:mb-12 max-w-2xl lg:max-w-3xl mx-auto leading-relaxed font-light drop-shadow-md px-4">
+            <p>An intimate journey from Lombok to Flores.</p>
+            <p className="mt-2 font-semibold text-[#eaddbd]">
+               Fixed departures every <span className="underline decoration-[#B88E52] underline-offset-4">Saturday</span>.
+            </p>
+          </motion.div>
           
           <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4 w-full sm:w-auto">
             <a 
@@ -348,12 +352,12 @@ export default function PublicHomepage() {
                 Embark on an Exclusive Voyage
               </h2>
               <div className="w-16 md:w-20 h-1 bg-gradient-to-r from-[#B88E52] to-[#a37c46] mb-6 md:mb-8 rounded-full"></div>
-              <p className="text-gray-600 text-base md:text-lg leading-relaxed mb-4 md:mb-6">
-                <strong className="text-[#0f172a]">{BRAND_NAME}</strong> is a premier maritime operator offering extraordinary sailing expeditions. We provide unforgettable sea adventures with meticulously curated routes to Komodo Island, Pink Beach, Padar Island, Manta Point, and other stunning destinations across the archipelago.
-              </p>
-              <p className="text-gray-600 text-base md:text-lg leading-relaxed">
-                Enjoy a comfortable and secure journey aboard our flagship vessels, accompanied by breathtaking ocean views and professional hospitality for a truly memorable holiday experience.
-              </p>
+              <div className="text-gray-600 text-base md:text-lg leading-relaxed mb-4 md:mb-6">
+                <p><strong className="text-[#0f172a]">{BRAND_NAME}</strong> is a premier maritime operator offering extraordinary sailing expeditions. We provide unforgettable sea adventures with meticulously curated routes to Komodo Island, Pink Beach, Padar Island, Manta Point, and other stunning destinations across the archipelago.</p>
+              </div>
+              <div className="text-gray-600 text-base md:text-lg leading-relaxed">
+                <p>Enjoy a comfortable and secure journey aboard our flagship vessels, accompanied by breathtaking ocean views and professional hospitality for a truly memorable holiday experience.</p>
+              </div>
             </motion.div>
 
             <motion.div variants={staggerContainer} className="w-full lg:w-1/2 flex overflow-x-auto sm:grid sm:grid-cols-3 gap-4 sm:gap-6 pb-4 sm:pb-0 snap-x no-scrollbar -mx-5 px-5 sm:mx-0 sm:px-0">
@@ -397,9 +401,9 @@ export default function PublicHomepage() {
             <motion.div variants={fadeInUp}>
               <span className="text-[#B88E52] font-semibold tracking-widest uppercase text-xs md:text-sm mb-2 md:mb-3 block">Trust & Comfort</span>
               <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172a] mb-4 md:mb-6 leading-tight">Engineered for <br className="hidden md:block"/> Supreme Comfort</h2>
-              <p className="text-gray-600 text-base md:text-lg mb-8 md:mb-10 leading-relaxed font-light">
-                As a direct operator of {BRAND_NAME}, we guarantee the highest standards of safety and hospitality. Our vessel is meticulously designed to provide a spacious, luxurious retreat with strict compliance to national maritime regulations.
-              </p>
+              <div className="text-gray-600 text-base md:text-lg mb-8 md:mb-10 leading-relaxed font-light">
+                <p>As a direct operator of {BRAND_NAME}, we guarantee the highest standards of safety and hospitality. Our vessel is meticulously designed to provide a spacious, luxurious retreat with strict compliance to national maritime regulations.</p>
+              </div>
             </motion.div>
 
             <motion.div variants={fadeInUp} className="block lg:hidden w-full relative mb-10">
@@ -451,9 +455,9 @@ export default function PublicHomepage() {
           >
             <motion.span variants={fadeInUp} className="text-[#B88E52] font-semibold tracking-widest uppercase text-xs md:text-sm mb-2 block">The Route</motion.span>
             <motion.h2 variants={fadeInUp} className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172a] mb-4 md:mb-6">4 Days of Wonder</motion.h2>
-            <motion.p variants={fadeInUp} className="text-gray-600 max-w-2xl mx-auto text-base md:text-lg mb-6 md:mb-8 leading-relaxed">
-              Embark on a carefully curated route traversing the pristine waters of the Indonesian archipelago. Witness prehistoric dragons, pink sands, and majestic mantas.
-            </motion.p>
+            <motion.div variants={fadeInUp} className="text-gray-600 max-w-2xl mx-auto text-base md:text-lg mb-6 md:mb-8 leading-relaxed">
+              <p>Embark on a carefully curated route traversing the pristine waters of the Indonesian archipelago. Witness prehistoric dragons, pink sands, and majestic mantas.</p>
+            </motion.div>
           </motion.div>
 
           {isLoadingItinerary ? (
@@ -514,9 +518,9 @@ export default function PublicHomepage() {
               The {BRAND_NAME} Difference
             </motion.span>
             <motion.h2 variants={fadeInUp} className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6">Why Choose Us?</motion.h2>
-            <motion.p variants={fadeInUp} className="text-gray-300 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
-              Experience a safe, comfortable, and unforgettable journey under our exclusive fleet, manned by professional crews and designed for the most discerning travelers.
-            </motion.p>
+            <motion.div variants={fadeInUp} className="text-gray-300 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
+              <p>Experience a safe, comfortable, and unforgettable journey under our exclusive fleet, manned by professional crews and designed for the most discerning travelers.</p>
+            </motion.div>
           </motion.div>
 
           <motion.div 
@@ -681,7 +685,7 @@ export default function PublicHomepage() {
 
           <div className="text-center mt-8 md:mt-12">
              <a href="/review" className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-white border border-[#B88E52]/40 text-[#0f172a] font-bold uppercase tracking-widest hover:bg-[#B88E52] hover:text-white transition-all shadow-sm hover:shadow-md w-full sm:w-auto text-xs md:text-sm">
-                Share Your Experience <ArrowRight className="w-4 h-4" />
+                View All Reviews <ArrowRight className="w-4 h-4" />
              </a>
           </div>
         </div>
@@ -737,9 +741,9 @@ export default function PublicHomepage() {
                     <h3 className="font-heading text-lg md:text-xl font-bold text-[#0f172a] mb-3 md:mb-4 group-hover:text-[#B88E52] transition-colors line-clamp-2 leading-tight">
                       {post.title}
                     </h3>
-                    <p className="text-gray-600 mb-6 md:mb-8 line-clamp-2 md:line-clamp-3 leading-relaxed flex-grow text-sm">
-                      {post.excerpt}
-                    </p>
+                    <div className="text-gray-600 mb-6 md:mb-8 line-clamp-2 md:line-clamp-3 leading-relaxed flex-grow text-sm">
+                      <p>{post.excerpt}</p>
+                    </div>
                     <span className="text-[#B88E52] font-bold text-xs md:text-sm flex items-center gap-2 mt-auto uppercase tracking-widest">
                       Read Article <ArrowRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     </span>
@@ -751,7 +755,7 @@ export default function PublicHomepage() {
 
           <div className="text-center">
              <a href="/blog" className="inline-flex items-center justify-center gap-2 text-[#0f172a] font-bold uppercase tracking-widest text-xs md:text-sm hover:text-[#B88E52] transition-colors border-b-2 border-transparent hover:border-[#B88E52] pb-1">
-                View All Entries <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
+               View All Entries <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
              </a>
           </div>
         </div>
@@ -768,9 +772,9 @@ export default function PublicHomepage() {
         >
           <motion.span variants={fadeInUp} className="text-[#B88E52] font-semibold tracking-widest uppercase text-xs md:text-sm mb-2 block">Digital Ecosystem</motion.span>
           <motion.h2 variants={fadeInUp} className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172a] mb-4 md:mb-6">Unlock Your Privileges</motion.h2>
-          <motion.p variants={fadeInUp} className="text-[#0f172a]/80 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
-            We are building a world-class booking platform. Secure your early-bird benefits and tiers today by registering manually via our concierges.
-          </motion.p>
+          <motion.div variants={fadeInUp} className="text-[#0f172a]/80 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
+            <p>We are building a world-class booking platform. Secure your early-bird benefits and tiers today by registering manually via our concierges.</p>
+          </motion.div>
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-6 lg:gap-12 relative z-10">
@@ -842,7 +846,7 @@ export default function PublicHomepage() {
         </div>
       </section>
 
-      {/* FULLSCREEN REVIEW MODAL */}
+      {/* FULLSCREEN REVIEW MODAL (Menampilkan detail Review jika ada gambar yang di-klik di Homepage) */}
       <AnimatePresence>
         {selectedReview && (
           <motion.div 

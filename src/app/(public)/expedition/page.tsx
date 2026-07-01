@@ -50,7 +50,7 @@ const imgKomodo = "https://images.unsplash.com/photo-1717238977683-5f06a9e60694?
 const imgPinkBeach = "https://images.unsplash.com/photo-1724127722795-96efb9caffbc?q=80&w=1929&auto=format&fit=crop";
 const imgVessel = "https://res.cloudinary.com/danyx7uny/image/upload/v1781582217/obuwude82h22wr1wvscz.png";
 
-// --- ORIGINAL PREMIUM FALLBACK DATA (UPDATED TO MONDAY DEPARTURE) ---
+// --- ORIGINAL PREMIUM FALLBACK DATA (UPDATED TO SATURDAY DEPARTURE) ---
 const defaultExpeditionData = {
   highlights: [
     { title: "Saleh Bay – Whale Sharks", desc: "Swim alongside majestic whale sharks in the calm waters of Sumbawa.", image: imgWhaleShark, span: "md:col-span-2 row-span-1" },
@@ -60,7 +60,7 @@ const defaultExpeditionData = {
   ],
   itinerary: [
     {
-      day: "DAY 1 • MONDAY", title: "Departure & Secret Islands", image: imgVessel,
+      day: "DAY 1 • SATURDAY", title: "Departure & Secret Islands", image: imgVessel,
       activities: [
         { time: "Morning Pick-Up", text: "Lombok Hotel Pick-Up (08:00 - 10:00 AM) via premium transport to our departure lounge.", iconName: "sunrise" },
         { time: "03:30 PM", text: `Board the ${BRAND_NAME} flagship vessel and set sail towards Komodo National Park.`, iconName: "anchor" },
@@ -69,7 +69,7 @@ const defaultExpeditionData = {
       meals: "Dinner Included", overnight: "Overnight onboard while sailing under the stars."
     },
     {
-      day: "DAY 2 • TUESDAY", title: "Whale Sharks & Tambora", image: imgWhaleShark,
+      day: "DAY 2 • SUNDAY", title: "Whale Sharks & Tambora", image: imgWhaleShark,
       activities: [
         { time: "Morning", text: "Swim alongside majestic whale sharks in the serene waters of Saleh Bay.", iconName: "sunrise" },
         { time: "Midday", text: "Sail across Tambora waters. Keep an eye out for playful dolphins.", iconName: "sun" },
@@ -78,7 +78,7 @@ const defaultExpeditionData = {
       meals: "Breakfast, Lunch & Dinner", overnight: "Overnight onboard."
     },
     {
-      day: "DAY 3 • WEDNESDAY", title: "Komodo & Padar Excursion", image: imgKomodo,
+      day: "DAY 3 • MONDAY", title: "Komodo & Padar Excursion", image: imgKomodo,
       activities: [
         { time: "Morning", text: "Guided trekking at Loh Liang Village. Encounter the legendary Komodo dragons.", iconName: "sunrise" },
         { time: "Midday", text: "Swim, snorkel, and relax on the rare pink sands of Pink Beach.", iconName: "sun" },
@@ -87,7 +87,7 @@ const defaultExpeditionData = {
       meals: "Breakfast, Lunch & Dinner", overnight: "Overnight onboard near Padar."
     },
     {
-      day: "DAY 4 • THURSDAY", title: "Majarite, Kelor & Return", image: imgPinkBeach,
+      day: "DAY 4 • TUESDAY", title: "Majarite, Kelor & Return", image: imgPinkBeach,
       activities: [
         { time: "Morning", text: "Snorkeling session at Majarite Island. Explore vibrant coral reefs.", iconName: "sunrise" },
         { time: "Midday", text: "Explore Kelor Island. Relax on white sandy beaches or hike to the hilltop.", iconName: "sun" },
@@ -167,8 +167,7 @@ export default function ExpeditionPage() {
           const data = docSnap.data();
           const mergedHighlights = data.highlights && Array.isArray(data.highlights) && data.highlights.length > 0 ? data.highlights.map((h: any, i: number) => ({...defaultExpeditionData.highlights[i % defaultExpeditionData.highlights.length], ...h, image: h.image || defaultExpeditionData.highlights[i % defaultExpeditionData.highlights.length].image})) : defaultExpeditionData.highlights;
           
-          // NOTE: If Firebase has old Day 1/2/3/4 string, we override it here locally to force the MONDAY structure if desired, 
-          // but gracefully falling back to defaultExpeditionData if the DB format is basic.
+          // Fallback to defaultExpeditionData if the DB format is basic
           const mergedItinerary = data.itinerary && Array.isArray(data.itinerary) && data.itinerary.length > 0 ? data.itinerary.map((it: any, i: number) => ({...defaultExpeditionData.itinerary[i % defaultExpeditionData.itinerary.length], ...it, day: defaultExpeditionData.itinerary[i % defaultExpeditionData.itinerary.length].day, image: it.image || defaultExpeditionData.itinerary[i % defaultExpeditionData.itinerary.length].image, activities: Array.isArray(it.activities) ? it.activities.map((act: any) => ({time: act.time || "00:00", text: act.text || "", iconName: act.iconName || "sun"})) : []})) : defaultExpeditionData.itinerary;
           
           const mergedCabinPackages = data.cabinPackages && Array.isArray(data.cabinPackages) && data.cabinPackages.length > 0 ? data.cabinPackages.map((c: any, i: number) => ({...defaultExpeditionData.cabinPackages[i % defaultExpeditionData.cabinPackages.length], ...c, image: c.image || defaultExpeditionData.cabinPackages[i % defaultExpeditionData.cabinPackages.length].image, features: Array.isArray(c.features) ? c.features.filter(Boolean) : []})) : defaultExpeditionData.cabinPackages;
@@ -219,7 +218,7 @@ export default function ExpeditionPage() {
             className="w-full lg:w-1/2 text-center lg:text-left pt-6 lg:pt-0"
           >
             <motion.div variants={fadeInUp} className="inline-flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 rounded-full bg-white/5 border border-white/10 text-[#eaddbd] text-[10px] md:text-xs font-bold mb-6 backdrop-blur-md shadow-sm uppercase tracking-widest mx-auto lg:mx-0">
-              <CalendarDays className="h-3.5 w-3.5 text-[#B88E52]" /> Departing Every Monday
+              <CalendarDays className="h-3.5 w-3.5 text-[#B88E52]" /> Departing Every Saturday
             </motion.div>
             
             <motion.h1 variants={fadeInUp} className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6 tracking-tight leading-[1.15]">
@@ -352,7 +351,7 @@ export default function ExpeditionPage() {
           </span>
           <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f172a] mb-4 md:mb-6">The Grand Itinerary</h2>
           <p className="text-gray-600 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
-            Our trips are safe, meticulously organized, and perfectly paced. Follow the timeline of your upcoming adventure, setting sail every Monday.
+            Our trips are safe, meticulously organized, and perfectly paced. Follow the timeline of your upcoming adventure, setting sail every Saturday.
           </p>
         </div>
 

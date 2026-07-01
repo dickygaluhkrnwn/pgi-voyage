@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, FileText, Award, Ship, Flag, Users, Scale, Ruler, LifeBuoy, Flame, ShieldCheck, FileSignature, CheckCircle2, MapPin, BedDouble, Droplets, Wifi, Compass, Waves, PenTool, LayoutTemplate, Info, Map as MapIcon } from "lucide-react";
+import { ArrowRight, FileText, Award, Ship, Flag, Users, Scale, Ruler, LifeBuoy, Flame, ShieldCheck, CheckCircle2, MapPin, BedDouble, Droplets, Wifi, Compass, Waves, PenTool, LayoutTemplate, Info, Map as MapIcon } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import { BRAND_NAME, CONTACT } from "@/lib/constants";
 
@@ -120,12 +120,12 @@ const technicalDocuments = [
   }
 ];
 
-// --- DATA: SPECIFICATIONS (UPDATED TO MONDAY DEPARTURE) ---
+// --- DATA: SPECIFICATIONS (UPDATED TO SATURDAY DEPARTURE) ---
 const specifications = [
   {
     title: "Route & Schedule",
     icon: <MapPin className="w-5 h-5 md:w-6 md:h-6 text-[#B88E52]" />,
-    items: ["Lombok (Kayangan) ➔ Labuan Bajo", "Fixed Departures: Every Monday", "Adjustable to weather conditions"]
+    items: ["Lombok (Kayangan) ➔ Labuan Bajo", "Fixed Departures: Every Saturday", "Adjustable to weather conditions"]
   },
   {
     title: "Capacity & Crew",
